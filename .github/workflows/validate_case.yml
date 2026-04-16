@@ -68,7 +68,7 @@ jobs:
             const redactExit = '${{ steps.redact.outputs.exit_code }}';
             const warnings = JSON.parse('${{ steps.text_check.outputs.warnings }}');
 
-            let comment = '## Skill-Agent-MCP Docter — Automated Validation\n\n';
+            let comment = '## AgentRX — Automated Validation\n\n';
             comment += 'This workflow is schema-agnostic but aligned with the v2 task-first contribution model.\n\n';
 
             if (hasJson) {

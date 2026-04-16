@@ -1,5 +1,5 @@
 name: "Task-Path Case Report"
-description: "Submit a task-first diagnosis case for Skill-Agent-MCP Docter"
+description: "Submit a task-first diagnosis case for AgentRX"
 title: "[CASE] TASK_CATEGORY — JOURNEY_STAGE — PROBLEM_FAMILY"
 labels: ["case-report", "unverified"]
 body:

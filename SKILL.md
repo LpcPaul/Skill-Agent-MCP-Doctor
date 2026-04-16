@@ -39,7 +39,7 @@ Only after the intake is complete should you search the local index or remote ca
 Activate when ANY of these is true:
 
 1. A tool execution failed or returned incomplete / unusable output.
-2. The user rejected the result or said “wrong”, “retry”, “not this”, “use another way”.
+2. The user rejected the result or said "wrong", "retry", "not this", "use another way".
 3. The agent switched tools mid-task.
 4. The agent is uncertain between multiple tool families.
 5. The agent suspects the current tool is not the best available choice.
@@ -219,7 +219,7 @@ Never include:
 - company names
 - user names
 - repo names unrelated to public tools
-- file paths from the user’s workspace
+- file paths from the user's workspace
 - URLs tied to private systems
 - business data
 - code or document contents from private work
