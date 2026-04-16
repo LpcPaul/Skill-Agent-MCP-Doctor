@@ -1,134 +1,206 @@
-# Intake Card — what the agent must fill before searching
+# Intake Card — v2.1
 
-## Why this exists
+## What this is
 
-The agent itself is the only party that directly “feels” the blockage while working.
+The intake card is the bridge between an AI agent's stuck state and the AgentRX case library.
 
-The repository is just a library.  
-The agent must first translate its own stuck state into a queryable structure.
+It forces the agent to translate its subjective experience into a structured, queryable format.
 
-That structure is the intake card.
+## Core principle: Evidence before Inference
 
-## Required fields
+The intake card is split into two layers:
 
-### 1. task_category
+| Layer | What it contains | Mutability |
+|---|---|---|
+| **Evidence** | Observable facts extracted from the context | Immutable |
+| **Inference** | AI-generated diagnosis and prescription | Re-computable |
+
+The agent must fill **evidence first**, then derive **inference** from it.
+Inference without sufficient evidence is inference pollution.
+
+---
+
+## Part 1: Evidence
+
+Evidence is what the agent directly observes. No diagnosis language.
+
+### task
 What job is being attempted?
 
-Examples:
-- browse-web
-- create-presentation
-- read-files
-- analyze-data
+**Rule:** Describe at the human-job level, not the tool level.
 
-### 2. task_goal
-What abstract result is needed?
+Good:
+- `browse-web`
+- `read-files`
+- `create-presentation`
 
-Example:
-- extract content from a public page
-- generate a slide outline
-- compare two tools for the same task
+Bad:
+- `browser-cdp`
+- `playwright-mcp`
 
-### 3. journey_stage
-Where is the blockage?
-
-- understand-task
-- choose-capability
-- configure-capability
-- execute-task
-- validate-output
-- recover-from-failure
-- optimize-tool-path
-
-### 4. observed_symptom
-What is the surface symptom?
-
-Examples:
-- content incomplete
-- permission denied
-- wrong output format
-- unstable quality
-- agent uncertain which route to choose
-
-### 5. tool_triggered / tool_type
-What current route is active?
-
-Examples:
-- browser-cdp / skill
-- playwright-mcp / mcp
-- web_fetch / builtin
-
-### 6. suspected_problem_family
-What does this feel most like?
-
-Choose the best fit:
-- environment
-- configuration
-- invocation
-- capability_mismatch
-- quality_miss
-- observability_gap
-- recovery_gap
-- better_alternative_exists
-- hook_vs_model_boundary
-- task_framing_issue
-- not_a_tooling_problem
-- unknown
-
-### 7. constraints
-What special constraints matter?
-
-Examples:
-- needs login
-- needs dynamic render
-- local filesystem required
-- deterministic execution required
-- no network available
-
-### 8. attempted_actions
-What has already been tried?
-
-This prevents looped retries.
-
-### 9. desired_outcome
+### desired_outcome
 What is the agent actually trying to accomplish next?
 
 Examples:
-- finish the task
-- recover with a stronger alternative
+- extract main content from a public page
+- generate a slide outline
 - decide between two routes
-- stop wasting retries
 
-## Output shape
+### attempted_path
+What tool path was used?
+
+Contains:
+- `tool`: name of the tool (e.g. `browser-cdp`)
+- `tool_type`: one of `skill`, `mcp`, `plugin`, `builtin`, `agent`, `workflow`, `hook`
+- `other_tools`: alternative tools that were considered or available
+
+### symptom
+What is the surface observation?
+
+**Rule:** No diagnosis language. Just what was seen.
+
+Good:
+- `extracted content was incomplete`
+- `permission denied on file access`
+- `output format does not match expected schema`
+
+Bad:
+- `the tool is broken` (that's a diagnosis)
+- `capability mismatch` (that's a problem family)
+
+### context (optional)
+Additional context explaining the situation without business specifics.
+
+### environment (optional)
+Platform and constraint information:
+- `platform`: claude-code, claude-ai, openclaw, etc.
+- `requires_login`, `requires_dynamic_render`, etc.
+- `notes`: brief constraint notes
+
+### failed_step (optional)
+The specific step in the tool path that failed.
+
+### reproduction_steps (optional)
+What was already tried. This prevents looped retries.
+
+---
+
+## Part 2: Inference
+
+Inference is the AI's interpretation of the evidence. It is **re-computable** — a different agent reading the same evidence might reach a different inference.
+
+### journey_stage
+Where in the task journey is the blockage?
+
+One of:
+- `understand-task`
+- `choose-capability`
+- `configure-capability`
+- `execute-task`
+- `validate-output`
+- `recover-from-failure`
+- `optimize-tool-path`
+
+### problem_family
+What category of problem does this most resemble?
+
+One of:
+- `environment`
+- `configuration`
+- `invocation`
+- `capability_mismatch`
+- `quality_miss`
+- `observability_gap`
+- `recovery_gap`
+- `better_alternative_exists`
+- `hook_vs_model_boundary`
+- `task_framing_issue`
+- `not_a_tooling_problem`
+- `unknown`
+
+### why_current_path_failed
+**This is a core field.** Short explanation of why the current path is unsuitable for continued progress.
+
+**Rule:** Explain the mismatch, not the tool. Don't blame the tool — explain why the tool-path-task combination doesn't work.
+
+Good:
+- "The current tool only captures static HTML, but the page requires client-side rendering to populate content"
+- "The task requires authenticated API access, but the current path has no credential management"
+
+Bad:
+- "The tool is broken" (too vague)
+- "Capability mismatch" (that's the label, not the explanation)
+
+### best_candidate_route_id
+**This is a core field.** Must be a standard route id from `rules/routes.yaml`.
+
+**Rule:** This is an action path, not a tool brand name.
+
+Good:
+- `switch_to_alternative_tool_path`
+- `switch_to_web_research`
+- `request_missing_input`
+
+Bad:
+- `tavily`
+- `web-access skill`
+- `use playwright`
+
+### best_candidate_route_detail (optional)
+Explanation of why this route is recommended. May reference specific tools or strategies.
+
+### prerequisites_for_switch (optional)
+Lightweight checklist of what must be true before switching.
+
+Examples:
+- `internet_access`
+- `repo_access`
+- `api_credentials_available`
+
+### confidence
+Confidence in this inference: `high`, `medium`, or `low`.
+
+---
+
+## Complete example
 
 ```yaml
-platform: claude-code
-task_category: browse-web
-task_goal: extract main content from a public page
-journey_stage: execute-task
-observed_symptom: page content incomplete
-tool_triggered: browser-cdp
-tool_type: skill
-other_tools_in_path:
-  - web_fetch
-suspected_problem_family: capability_mismatch
-constraints:
-  requires_login: false
-  requires_dynamic_render: true
-  requires_local_filesystem: false
-  requires_network: true
-  requires_deterministic_execution: false
-  notes: client-side rendering likely
-attempted_actions:
-  - retried current browser route once
-desired_outcome: choose a better tool path and continue
-diagnosis_summary: current tool path is too weak for the task constraints
-confidence: medium
+evidence:
+  task: "browse-web"
+  desired_outcome: "Extract main content from a public webpage."
+  attempted_path:
+    tool: "browser-cdp"
+    tool_type: "skill"
+    other_tools:
+      - name: "web_fetch"
+        type: "builtin"
+        role: "candidate alternative"
+  symptom: "Extracted content was incomplete. Only the static HTML shell was captured."
+  context: "The target page relies on client-side JavaScript rendering."
+  environment:
+    platform: "claude-code"
+    requires_dynamic_render: true
+    requires_network: true
+  reproduction_steps:
+    - "Used browser-cdp skill once"
+    - "Retried without changing rendering strategy"
+
+inference:
+  journey_stage: "execute-task"
+  problem_family: "capability_mismatch"
+  why_current_path_failed: "The current tool only captures static HTML. The page requires client-side rendering to populate its content."
+  best_candidate_route_id: "switch_to_alternative_tool_path"
+  best_candidate_route_detail: "Switch to a browser path with stronger dynamic rendering support. playwright-mcp is a good candidate."
+  prerequisites_for_switch:
+    - "internet_access"
+    - "repo_access"
+  confidence: "medium"
 ```
 
-## Important rule
+---
 
-The intake card is not the final answer.
+## Key rule
 
-It is the bridge between:
-- the agent’s subjective stuck state
-- the repository’s structured knowledge
+If you don't have enough evidence to support an inference, leave the optional inference fields empty rather than inventing them.
+
+Under-specified inference is better than polluted inference.

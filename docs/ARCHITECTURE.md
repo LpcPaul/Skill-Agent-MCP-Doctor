@@ -1,148 +1,170 @@
-# Architecture — AgentRX
+# Architecture — AgentRX v2.1
 
 ## One sentence summary
 
-This project is a **stuck-state navigation system** for AI agents.
+AgentRX is a **stuck-state navigation system** for AI agents.
 
-It is not just a case database.  
-It is a way to turn a messy failure into a structured next-step decision.
+It is not a case database for humans.
+It is a machine-to-machine knowledge layer that turns messy failures into structured next-step decisions.
 
-## The old mistake
+## Audience
 
-A skill-first architecture assumes the agent can already answer:
+**Primary: AI agents** (consumers and contributors)
+**Secondary: humans** (reviewers and schema designers)
 
-- which skill was involved
+This audience choice drives every design decision:
+- We optimize for **machine retrieval precision**, not human browsing comfort
+- We optimize for **inference pollution control**, not contribution ease
+- We use **standardized route ids**, not free-text tool names
+- We split **evidence from inference**, because AI needs to know what is fact vs. interpretation
+
+## The old approach (v1)
+
+The v1 architecture assumed the agent could answer:
+- which tool was involved
 - what failure label applies
 
-That assumption is often false.
+This worked for simple cases but failed for real stuck states:
+- Agents feel symptoms first, not diagnoses
+- "page incomplete" is a symptom, not a failure type
+- The agent often doesn't know which tool to blame yet
 
-Agents usually feel the problem first as a symptom:
-
-- incomplete content
-- wrong output shape
-- permission denied
-- unstable result
-- unsure which tool to use
-- repeated retries with no progress
-
-That is why the new architecture starts from the agent’s **stuck state**, not from the tool name.
-
-## The new architecture
+## The new approach (v2.1)
 
 ```text
 stuck state
-  -> local self-diagnosis
-  -> intake card
-  -> task-first navigation
-  -> candidate actions
-  -> execution
-  -> optional case contribution
+  -> collect evidence (immutable facts)
+  -> generate inference (diagnosis + prescription)
+  -> search case library by task + stage + problem family
+  -> retrieve similar cases and route recommendations
+  -> choose next action
+  -> optional: contribute this case back
 ```
 
-## The four layers
+## Case Object: Two Layers
 
-### 1. Intake layer
-Purpose:
-- force the agent to describe the blockage in a common language
+Every case is split into two layers:
 
-Questions:
-- what task is this
-- what stage is stuck
-- what symptom is visible
-- what tool path is active
-- what has already been tried
-- what constraints matter
+### Evidence Layer (immutable)
 
-Output:
-- a standard intake card
+Facts extracted directly from the stuck context:
+- `task`: what job was being attempted
+- `desired_outcome`: what the agent needed
+- `attempted_path`: what tool path was used
+- `symptom`: what was observed
+- `context`, `environment`, `failed_step`, `reproduction_steps`
 
-### 2. Navigation layer
-Purpose:
-- route the intake into the right zone of the library
+These fields are **observations**, not interpretations.
+They should be the same regardless of which AI reads them.
 
-Order:
-1. task category
-2. journey stage
-3. suspected problem family
-4. active tool path
-5. recommendation type
+### Inference Layer (re-computable)
 
-### 3. Resolution layer
-Purpose:
-- tell the agent what to do next
+AI-generated diagnosis and prescription:
+- `journey_stage`: where the blockage is
+- `problem_family`: what category it fits
+- `why_current_path_failed`: why the current path won't work
+- `best_candidate_route_id`: which action path to take next
+- `confidence`: how sure the AI is
 
-The first output is not a case ID.
-The first output is a **next action type**.
+These fields are **interpretations**.
+A different AI reading the same evidence might produce different inference.
+This is by design — inference is disposable, evidence is permanent.
 
-Examples:
-- adjust current invocation
-- switch tool
-- inspect environment
-- move to workflow/hook
-- reframe task
-- ask one missing constraint
-- stop changing tools
+## Route Registry
 
-### 4. Evidence layer
-Purpose:
-- support recommendations with real cases and comparisons
+`rules/routes.yaml` defines standard **route ids** that `best_candidate_route_id` must reference.
 
-A case is evidence.
-A taxonomy is navigation.
-A recommendation is the operational output.
+Routes are **action paths**, not tool brands:
+- `switch_to_web_research` — not "use Tavily"
+- `switch_to_alternative_tool_path` — not "use playwright-mcp"
+- `request_missing_input` — not "ask user for API key"
 
-## Library analogy
+Why this matters:
+- Route ids are stable across tool ecosystem changes
+- They enable aggregation and statistics ("30% of cases recommend route X")
+- They prevent tool-name pollution in the case library
+- They make cases future-proof (tools come and go, action patterns persist)
 
-The agent should not need to know the exact book title.
+Current routes:
+- `switch_to_web_research`
+- `switch_to_official_docs`
+- `switch_to_local_file_inspection`
+- `switch_to_api_or_connector_access`
+- `switch_to_environment_debugging`
+- `request_missing_input`
+- `decompose_task_first`
+- `switch_to_repro_minimization`
+- `switch_to_schema_or_format_validation`
+- `switch_to_alternative_tool_path`
 
-It should first be able to say:
+## Why Inference Pollution Matters More Than Contribution Friction
 
-- I am in the “browse-web” section
-- I am stuck at “execute-task”
-- this looks like “capability_mismatch”
+In a human-contributed system, you optimize for ease of contribution.
+In an AI-contributed system, you optimize for **truth preservation**.
 
-Then it can inspect:
-- typical symptoms
-- stronger tool routes
-- similar cases
-- common recovery actions
+AI agents can generate cases faster than humans ever could.
+This means:
+- Bad cases spread faster
+- Polluted inference contaminates retrieval
+- Future agents will learn from wrong patterns
 
-## Why local self-diagnosis is mandatory
+That's why:
+- Evidence is required and structured
+- Inference is clearly labeled as interpretation
+- `why_current_path_failed` and `best_candidate_route_id` are mandatory
+- Optional inference fields can be left empty if evidence is insufficient
+- Validation checks route ids against the registry
 
-If the agent searches too early, retrieval quality collapses.
+## Why No expected_tradeoff or evidence_strength (Yet)
 
-Raw queries like:
-- “browser tool broken”
-- “this skill failed”
-- “page incomplete”
+These fields were considered but deferred because:
+- `expected_tradeoff` requires cross-case analysis that early systems can't reliably produce
+- `evidence_strength` conflates confidence with data quality — they're different concepts
+- Both fields add subjective judgment without clear validation criteria
+- They can be added later when the case library is large enough to support them
 
-are too weak.
+## Navigation Model
 
-The intake card improves search precision because it turns the problem into structured signals.
+Agents navigate the library by:
+1. `task` — what am I trying to do
+2. `journey_stage` — where am I stuck
+3. `problem_family` — what does this look like
+4. `best_candidate_route_id` — what should I do next
 
-## Design constraint
+This is intentionally different from the old model:
+- Old: tool_name → failure_type → remedy
+- New: task → stage → problem_family → route
 
-This architecture must stay finite.
+## Index Structure
 
-The project does **not** attempt to catalog every AI tool in existence.
-Its scope is bounded by one rule:
+`cases/index.json` is a lightweight routing index containing:
+- `schema_versions`: versions present in the library
+- `task_categories`, `route_ids`, `problem_families`, `journey_stages`: aggregated dimensions
+- `route_counts`: how many cases recommend each route
+- `cases`: lightweight entries with searchable text for retrieval
 
-> only reason about tools in the context of a failed or underperforming task path
+The index is rebuilt by `scripts/build_index.py` and is compatible with both v2.0 (flat) and v2.1 (evidence/inference) case structures.
 
-That prevents the project from turning into an infinite review site.
+## Backward Compatibility
 
-## Practical consequence for the repository
+v2.1 cases are the canonical format going forward.
+v2.0 flat cases are supported through:
+- `scripts/validate_case.py --normalize` converts v2.0 to v2.1
+- `scripts/build_index.py` reads both formats and normalizes on-the-fly
+- `legacy_mapping` field preserves the original structure for reference
 
-This architecture means the repository should prioritize:
+## Execution Scripts
 
-- task taxonomy
-- journey stages
-- problem families
-- case schema
-- intake instructions
-- recommendation types
+| Script | Purpose |
+|---|---|
+| `validate_case.py` | Validate a case against schema + route registry |
+| `build_index.py` | Rebuild cases/index.json from all case files |
+| `ci_self_test.py` | Run all validation checks |
 
-over:
-- giant lists of tools
-- unstructured issue dumps
-- skill-name-only browsing
+## Design Constraint
+
+This system stays finite by one rule:
+
+> Only reason about tools in the context of a failed or underperforming task path.
+
+This prevents it from becoming an infinite tool review site.

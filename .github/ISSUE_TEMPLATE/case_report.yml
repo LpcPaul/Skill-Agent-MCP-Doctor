@@ -1,93 +1,53 @@
-name: "Task-Path Case Report"
-description: "Submit a task-first diagnosis case for AgentRX"
-title: "[CASE] TASK_CATEGORY — JOURNEY_STAGE — PROBLEM_FAMILY"
+name: "Case Report (AI Contributor)"
+description: "Submit a stuck-state diagnosis case for AgentRX. This form is designed for AI / agent contributors."
+title: "[CASE] TASK — JOURNEY_STAGE — PROBLEM_FAMILY"
 labels: ["case-report", "unverified"]
 body:
   - type: markdown
     attributes:
       value: |
-        ## Privacy reminder
+        ## AgentRX Case Report — v2.1
 
-        Do **not** include:
-        - company names
-        - personal names
-        - private URLs
-        - local file paths
-        - business data
-        - code or document contents from private work
+        This form is designed for **AI contributors**.
+        Cases are split into **evidence** (observable facts) and **inference** (diagnosis + prescription).
 
-        Focus on:
-        - the task
-        - the stage
-        - the symptom
-        - the tool path
-        - the next action
+        **Privacy:** Do not include company names, personal names, private URLs, local file paths, business data, or code/document contents from private work.
 
-  - type: dropdown
-    id: platform
+  # ── EVIDENCE ────────────────────────────────────────────────
+
+  - type: markdown
     attributes:
-      label: Platform
-      options:
-        - claude-code
-        - claude-ai
-        - openclaw
-        - codex
-        - cursor
-        - gemini-cli
-        - other
-    validations:
-      required: true
+      value: "## Evidence — observable facts from the stuck context"
 
   - type: input
-    id: task_category
+    id: evidence_task
     attributes:
-      label: Task category
-      description: "Human task, not tool name"
+      label: Task
+      description: "What job was being attempted? Human-task level, not tool name."
       placeholder: "e.g. browse-web"
     validations:
       required: true
 
   - type: input
-    id: task_goal
+    id: evidence_desired_outcome
     attributes:
-      label: Task goal
-      description: "Abstract user goal"
-      placeholder: "e.g. Extract main content from a public webpage"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: journey_stage
-    attributes:
-      label: Journey stage
-      options:
-        - understand-task
-        - choose-capability
-        - configure-capability
-        - execute-task
-        - validate-output
-        - recover-from-failure
-        - optimize-tool-path
-    validations:
-      required: true
-
-  - type: textarea
-    id: observed_symptom
-    attributes:
-      label: Observed symptom
-      description: "Describe the surface symptom, not the full diagnosis"
-      placeholder: "e.g. content extracted from the page was incomplete"
+      label: Desired outcome
+      description: "What was the agent trying to accomplish next?"
+      placeholder: "e.g. extract main content from a public page"
     validations:
       required: true
 
   - type: input
-    id: tool_triggered
+    id: evidence_attempted_tool
     attributes:
-      label: Current tool path element
+      label: Attempted tool
+      description: "What tool or path was used?"
       placeholder: "e.g. browser-cdp"
+    validations:
+      required: true
 
   - type: dropdown
-    id: tool_type
+    id: evidence_tool_type
     attributes:
       label: Tool type
       options:
@@ -99,11 +59,83 @@ body:
         - workflow
         - hook
         - unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence_symptom
+    attributes:
+      label: Symptom
+      description: "Surface-level observation. No diagnosis language."
+      placeholder: "e.g. extracted content was incomplete"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence_reproduction_steps
+    attributes:
+      label: Reproduction steps
+      description: "What was already tried? Prevents looped retries."
+      placeholder: |
+        - used browser-cdp once
+        - retried extraction without changing rendering strategy
+
+  - type: textarea
+    id: evidence_context
+    attributes:
+      label: Context (optional)
+      description: "Additional context explaining the situation without business specifics."
+
+  - type: textarea
+    id: evidence_environment_notes
+    attributes:
+      label: Environment notes (optional)
+      description: "Platform, constraints, or runtime details."
+      placeholder: |
+        Platform: claude-code
+        Requires dynamic render: true
+        Requires network: true
+
+  - type: input
+    id: evidence_failed_step
+    attributes:
+      label: Failed step (optional)
+      description: "The specific step in the tool path that failed."
+      placeholder: "e.g. DOM content extraction returned empty"
+
+  - type: textarea
+    id: evidence_artifacts_used
+    attributes:
+      label: Artifacts used (optional)
+      description: "Abstract file types or resource types. No private file paths."
+      placeholder: "e.g. HTML page, public URL"
+
+  # ── INFERENCE ───────────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Inference — AI-generated diagnosis and prescription"
 
   - type: dropdown
-    id: suspected_problem_family
+    id: inference_journey_stage
     attributes:
-      label: Suspected problem family
+      label: Journey stage
+      description: "Where in the task journey is the blockage?"
+      options:
+        - understand-task
+        - choose-capability
+        - configure-capability
+        - execute-task
+        - validate-output
+        - recover-from-failure
+        - optimize-tool-path
+    validations:
+      required: true
+
+  - type: dropdown
+    id: inference_problem_family
+    attributes:
+      label: Problem family
       options:
         - environment
         - configuration
@@ -121,48 +153,65 @@ body:
       required: true
 
   - type: textarea
-    id: attempted_actions
+    id: inference_why_current_path_failed
     attributes:
-      label: Attempted actions
-      description: "What was already tried?"
-      placeholder: |
-        - retried current tool
-        - changed output format request
-        - checked one alternative
-
-  - type: textarea
-    id: desired_outcome
-    attributes:
-      label: Desired outcome
-      description: "What are you actually trying to accomplish next?"
-      placeholder: "e.g. choose a better tool path and continue the task"
+      label: Why current path failed
+      description: "Short explanation of why the current path is unsuitable for continued progress. This is inference, not evidence."
+      placeholder: "e.g. the current tool only captures static HTML, but the page requires client-side rendering"
+    validations:
+      required: true
 
   - type: dropdown
-    id: recommended_next_step
+    id: inference_best_candidate_route_id
     attributes:
-      label: Recommended next step
+      label: Best candidate route id
+      description: "Must be a standard route id from rules/routes.yaml. NOT a tool brand name."
       options:
-        - adjust_current_tool_invocation
-        - switch_tool_within_same_task
-        - inspect_environment_or_permissions
-        - move_to_hook_or_workflow
-        - reframe_task_before_retry
-        - ask_for_one_missing_constraint
-        - stop_tooling_changes_not_a_tool_issue
-        - other
+        - switch_to_web_research
+        - switch_to_official_docs
+        - switch_to_local_file_inspection
+        - switch_to_api_or_connector_access
+        - switch_to_environment_debugging
+        - request_missing_input
+        - decompose_task_first
+        - switch_to_repro_minimization
+        - switch_to_schema_or_format_validation
+        - switch_to_alternative_tool_path
+    validations:
+      required: true
 
   - type: textarea
-    id: recommendation_detail
+    id: inference_best_candidate_route_detail
     attributes:
-      label: Recommendation detail
-      description: "Why this next step, and what are the candidate alternatives?"
+      label: Route detail (optional)
+      description: "Why this route is recommended. May reference specific tools or strategies."
+
+  - type: textarea
+    id: inference_prerequisites_for_switch
+    attributes:
+      label: Prerequisites for switch (optional)
+      description: "Lightweight checklist. One per line."
       placeholder: |
-        Primary: switch to web-access skill
-        Why: current tool is too weak for dynamic rendering
-        Alternatives: playwright-mcp (better for interaction), web_fetch (simpler but less capable)
+        internet_access
+        repo_access
 
   - type: dropdown
-    id: outcome
+    id: inference_confidence
+    attributes:
+      label: Confidence
+      options:
+        - high
+        - medium
+        - low
+
+  # ── RESOLUTION ──────────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Resolution — what happened after the recommendation"
+
+  - type: dropdown
+    id: resolution_outcome
     attributes:
       label: Outcome
       options:
@@ -171,18 +220,37 @@ body:
         - unresolved
         - unknown
 
-  - type: dropdown
-    id: confidence
+  - type: textarea
+    id: resolution_follow_up_notes
     attributes:
-      label: Confidence
+      label: Follow-up notes (optional)
+
+  # ── METADATA ────────────────────────────────────────────────
+
+  - type: markdown
+    attributes:
+      value: "## Metadata"
+
+  - type: dropdown
+    id: metadata_source
+    attributes:
+      label: Source
       options:
-        - high
-        - medium
-        - low
+        - local-intake
+        - remote-search
+        - user-reported
+        - other
+
+  - type: textarea
+    id: metadata_tags
+    attributes:
+      label: Tags
+      description: "Comma-separated searchable tags."
+      placeholder: "browse-web, execute-task, capability_mismatch"
 
   - type: textarea
     id: full_json
     attributes:
       label: Full case JSON (optional)
-      description: "Paste a v2 case object if available"
+      description: "Paste a complete v2.1 case object if available."
       render: json

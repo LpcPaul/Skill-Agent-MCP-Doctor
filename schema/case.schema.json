@@ -1,270 +1,270 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "AgentRX Case Report",
-  "description": "Task-first schema for AI tool-path diagnosis cases.",
+  "title": "AgentRX Case Report — v2.1",
+  "description": "AI-only case schema with evidence / inference separation. Every case represents one stuck-state diagnosis contributed by an AI agent.",
   "type": "object",
   "required": [
-    "case_id",
-    "timestamp",
-    "platform",
-    "task_category",
-    "task_goal",
-    "journey_stage",
-    "observed_symptom",
-    "tool_triggered",
-    "tool_type",
-    "suspected_problem_family",
-    "diagnosis_summary",
-    "recommended_next_step"
+    "schema_version",
+    "id",
+    "title",
+    "summary",
+    "created_at",
+    "tags",
+    "evidence",
+    "inference"
   ],
   "properties": {
-    "case_id": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.1",
+      "description": "Schema version. Must be '2.1'."
+    },
+    "id": {
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]{6,40}$",
       "description": "Unique case ID. Example: 2026-04-16-browse-web-001"
     },
-    "timestamp": {
+    "title": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Short human-readable title. Example: browse-web execute-task capability_mismatch."
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "One-sentence summary of the stuck state and resolution."
+    },
+    "created_at": {
       "type": "string",
       "format": "date-time"
     },
-    "platform": {
+    "updated_at": {
       "type": "string",
-      "enum": [
-        "claude-code",
-        "claude-ai",
-        "openclaw",
-        "codex",
-        "cursor",
-        "gemini-cli",
-        "other"
-      ]
+      "format": "date-time"
     },
-    "task_category": {
+    "source": {
       "type": "string",
-      "maxLength": 80,
-      "description": "Human task category, not a tool name."
+      "maxLength": 120,
+      "description": "Abstract source tag. No private URLs or usernames."
     },
-    "task_goal": {
-      "type": "string",
-      "maxLength": 200,
-      "description": "Abstract goal the agent was trying to complete."
-    },
-    "journey_stage": {
-      "type": "string",
-      "enum": [
-        "understand-task",
-        "choose-capability",
-        "configure-capability",
-        "execute-task",
-        "validate-output",
-        "recover-from-failure",
-        "optimize-tool-path"
-      ]
-    },
-    "observed_symptom": {
-      "type": "string",
-      "maxLength": 200,
-      "description": "Surface symptom. Example: incomplete page content."
-    },
-    "symptom_tags": {
+    "tags": {
       "type": "array",
       "items": {
         "type": "string",
-        "maxLength": 50
+        "maxLength": 40
       },
-      "maxItems": 12
+      "maxItems": 12,
+      "description": "Searchable tags derived from task, stage, and problem family."
     },
-    "tool_triggered": {
-      "type": "string",
-      "maxLength": 100,
-      "description": "Name of the currently used tool or path segment."
-    },
-    "tool_type": {
-      "type": "string",
-      "enum": [
-        "skill",
-        "mcp",
-        "plugin",
-        "builtin",
-        "agent",
-        "workflow",
-        "hook",
-        "unknown"
-      ]
-    },
-    "other_tools_in_path": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name",
-          "type"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 100
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "skill",
-              "mcp",
-              "plugin",
-              "builtin",
-              "agent",
-              "workflow",
-              "hook",
-              "unknown"
-            ]
-          },
-          "role": {
-            "type": "string",
-            "maxLength": 80
-          }
-        },
-        "additionalProperties": false
-      },
-      "maxItems": 20
-    },
-    "suspected_problem_family": {
-      "type": "string",
-      "enum": [
-        "environment",
-        "configuration",
-        "invocation",
-        "capability_mismatch",
-        "quality_miss",
-        "observability_gap",
-        "recovery_gap",
-        "better_alternative_exists",
-        "hook_vs_model_boundary",
-        "task_framing_issue",
-        "not_a_tooling_problem",
-        "unknown"
-      ]
-    },
-    "constraints": {
+    "evidence": {
       "type": "object",
+      "description": "Facts extracted directly from the stuck context. These are immutable observations, not diagnoses.",
+      "required": [
+        "task",
+        "desired_outcome",
+        "attempted_path",
+        "symptom"
+      ],
       "properties": {
-        "requires_login": {
-          "type": "boolean"
+        "task": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "What job was being attempted. Human-task level, not tool name. Example: browse-web, read-files, create-presentation."
         },
-        "requires_dynamic_render": {
-          "type": "boolean"
+        "desired_outcome": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "What the agent was trying to accomplish next. Example: extract main content from a public page."
         },
-        "requires_local_filesystem": {
-          "type": "boolean"
+        "attempted_path": {
+          "type": "object",
+          "required": [
+            "tool",
+            "tool_type"
+          ],
+          "properties": {
+            "tool": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Name of the tool or path segment that was used."
+            },
+            "tool_type": {
+              "type": "string",
+              "enum": [
+                "skill",
+                "mcp",
+                "plugin",
+                "builtin",
+                "agent",
+                "workflow",
+                "hook",
+                "unknown"
+              ]
+            },
+            "other_tools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "type"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 100 },
+                  "type": { "type": "string", "enum": ["skill", "mcp", "plugin", "builtin", "agent", "workflow", "hook", "unknown"] },
+                  "role": { "type": "string", "maxLength": 80 }
+                },
+                "additionalProperties": false
+              },
+              "maxItems": 20
+            }
+          },
+          "additionalProperties": false
         },
-        "requires_network": {
-          "type": "boolean"
+        "symptom": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Surface-level observation. No diagnosis language. Example: extracted content was incomplete."
         },
-        "requires_deterministic_execution": {
-          "type": "boolean"
+        "symptom_tags": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 50 },
+          "maxItems": 12
         },
-        "notes": {
+        "context": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Additional context that explains the situation without being business-specific."
+        },
+        "environment": {
+          "type": "object",
+          "properties": {
+            "platform": {
+              "type": "string",
+              "enum": ["claude-code", "claude-ai", "openclaw", "codex", "cursor", "gemini-cli", "other"]
+            },
+            "requires_login": { "type": "boolean" },
+            "requires_dynamic_render": { "type": "boolean" },
+            "requires_local_filesystem": { "type": "boolean" },
+            "requires_network": { "type": "boolean" },
+            "requires_deterministic_execution": { "type": "boolean" },
+            "notes": { "type": "string", "maxLength": 300 }
+          },
+          "additionalProperties": false
+        },
+        "failed_step": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "The specific step in the tool path that failed or underperformed."
+        },
+        "artifacts_used": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 120 },
+          "maxItems": 20,
+          "description": "Abstract file types or resource types used. No private file paths."
+        },
+        "reproduction_steps": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 180 },
+          "maxItems": 20,
+          "description": "What was already tried. Prevents looped retries."
+        }
+      },
+      "additionalProperties": false
+    },
+    "inference": {
+      "type": "object",
+      "description": "AI-generated diagnosis and prescription based on the evidence layer. These fields are re-computable and should not be treated as immutable facts.",
+      "required": [
+        "journey_stage",
+        "problem_family",
+        "why_current_path_failed",
+        "best_candidate_route_id"
+      ],
+      "properties": {
+        "journey_stage": {
+          "type": "string",
+          "enum": [
+            "understand-task",
+            "choose-capability",
+            "configure-capability",
+            "execute-task",
+            "validate-output",
+            "recover-from-failure",
+            "optimize-tool-path"
+          ]
+        },
+        "problem_family": {
+          "type": "string",
+          "enum": [
+            "environment",
+            "configuration",
+            "invocation",
+            "capability_mismatch",
+            "quality_miss",
+            "observability_gap",
+            "recovery_gap",
+            "better_alternative_exists",
+            "hook_vs_model_boundary",
+            "task_framing_issue",
+            "not_a_tooling_problem",
+            "unknown"
+          ]
+        },
+        "why_current_path_failed": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Short explanation of why the current path is unsuitable for continued progress. This is inference, not evidence."
+        },
+        "best_candidate_route_id": {
+          "type": "string",
+          "description": "Standard route id from rules/routes.yaml. Must NOT be a free-text tool brand name.",
+          "enum": [
+            "switch_to_web_research",
+            "switch_to_official_docs",
+            "switch_to_local_file_inspection",
+            "switch_to_api_or_connector_access",
+            "switch_to_environment_debugging",
+            "request_missing_input",
+            "decompose_task_first",
+            "switch_to_repro_minimization",
+            "switch_to_schema_or_format_validation",
+            "switch_to_alternative_tool_path"
+          ]
+        },
+        "best_candidate_route_detail": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Optional explanation of why this route is recommended. May reference specific tools or strategies."
+        },
+        "prerequisites_for_switch": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "maxItems": 10,
+          "description": "Lightweight checklist of what must be true before switching. Example: internet_access, repo_access."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence in this inference. Not evidence strength."
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "description": "What happened after the recommendation was applied.",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": ["resolved", "partially_resolved", "unresolved", "unknown"]
+        },
+        "follow_up_notes": {
           "type": "string",
           "maxLength": 300
         }
       },
       "additionalProperties": false
-    },
-    "attempted_actions": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "maxLength": 180
-      },
-      "maxItems": 20
-    },
-    "desired_outcome": {
-      "type": "string",
-      "maxLength": 200,
-      "description": "What the agent actually needs next. Examples: choose a better tool path, recover with a stronger alternative, decide between two routes."
-    },
-    "diagnosis_summary": {
-      "type": "string",
-      "maxLength": 400,
-      "description": "Abstract engineering diagnosis of the blockage."
-    },
-    "recommended_next_step": {
-      "type": "string",
-      "enum": [
-        "adjust_current_tool_invocation",
-        "switch_tool_within_same_task",
-        "inspect_environment_or_permissions",
-        "move_to_hook_or_workflow",
-        "reframe_task_before_retry",
-        "ask_for_one_missing_constraint",
-        "stop_tooling_changes_not_a_tool_issue",
-        "other"
-      ]
-    },
-    "recommendation_detail": {
-      "type": "string",
-      "maxLength": 600,
-      "description": "Why this next step is recommended, with candidate tools and tradeoffs."
-    },
-    "alternatives_considered": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name",
-          "type"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 100
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "skill",
-              "mcp",
-              "plugin",
-              "builtin",
-              "agent",
-              "workflow",
-              "hook",
-              "unknown"
-            ]
-          },
-          "better_for": {
-            "type": "string",
-            "maxLength": 180
-          },
-          "tradeoff": {
-            "type": "string",
-            "maxLength": 180
-          }
-        },
-        "additionalProperties": false
-      },
-      "maxItems": 12
-    },
-    "outcome": {
-      "type": "string",
-      "enum": [
-        "resolved",
-        "partially_resolved",
-        "unresolved",
-        "unknown"
-      ]
-    },
-    "confidence": {
-      "type": "string",
-      "enum": [
-        "high",
-        "medium",
-        "low"
-      ]
-    },
-    "source_reference": {
-      "type": "string",
-      "maxLength": 120,
-      "description": "Abstract source tag only. No private URLs or usernames."
     },
     "verified": {
       "type": "boolean",
@@ -272,20 +272,18 @@
     },
     "related_cases": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
+      "items": { "type": "string" },
       "maxItems": 20
     },
     "legacy_mapping": {
       "type": "object",
+      "description": "Preserves mapping from v1/v2.0 fields for backward compatibility.",
       "properties": {
-        "legacy_failure_type": {
-          "type": "string"
-        },
-        "legacy_skill_triggered": {
-          "type": "string"
-        }
+        "legacy_schema_version": { "type": "string" },
+        "legacy_failure_type": { "type": "string" },
+        "legacy_skill_triggered": { "type": "string" },
+        "legacy_task_category": { "type": "string" },
+        "legacy_journey_stage": { "type": "string" }
       },
       "additionalProperties": false
     }

@@ -27,95 +27,84 @@ Do NOT use for: general coding, broad research, normal execution when the agent 
 
 ---
 
-## Phase 1 — Build the intake card
+## Execution Order
 
-Before searching for answers, fill this structure.
+Follow this order strictly. Do not skip steps.
 
-```yaml
-platform: ""
-task_category: ""
-task_goal: ""
-journey_stage: ""
-observed_symptom: ""
-tool_triggered: ""
-tool_type: ""
-other_tools_in_path: []
-suspected_problem_family: ""
-constraints:
-  requires_login: false
-  requires_dynamic_render: false
-  requires_local_filesystem: false
-  requires_network: false
-  requires_deterministic_execution: false
-  notes: ""
-attempted_actions: []
-desired_outcome: ""
-diagnosis_summary: ""
-confidence: "high|medium|low"
-```
+### Step 1: Collect Evidence
 
-**Field rules:**
-- `task_category`: describe the human job, not the tool name (e.g. `browse-web`, not `browser-cdp`)
+Extract observable facts from the stuck context. These are immutable.
+
+Fill these fields:
+- `task`: what job is being attempted (human-task level, not tool name)
+- `desired_outcome`: what the agent needs next
+- `attempted_path`: what tool was used (tool name + tool type)
+- `symptom`: surface observation, no diagnosis language
+
+Optional evidence:
+- `context`: additional situation context
+- `environment`: platform and constraints
+- `failed_step`: specific step that failed
+- `reproduction_steps`: what was already tried
+
+**Rule:** If a field cannot be filled from observable facts, leave it empty. Do not invent evidence.
+
+### Step 2: Generate Inference
+
+Based on the evidence, produce diagnosis and prescription.
+
+Required inference fields:
 - `journey_stage`: one of `understand-task`, `choose-capability`, `configure-capability`, `execute-task`, `validate-output`, `recover-from-failure`, `optimize-tool-path`
-- `observed_symptom`: surface symptom only, no diagnosis
-- `suspected_problem_family`: one of `environment`, `configuration`, `invocation`, `capability_mismatch`, `quality_miss`, `observability_gap`, `recovery_gap`, `better_alternative_exists`, `hook_vs_model_boundary`, `task_framing_issue`, `not_a_tooling_problem`, `unknown`
-- `desired_outcome`: what the agent actually needs next (e.g. "choose a better tool path", "recover with a stronger alternative")
+- `problem_family`: one of `environment`, `configuration`, `invocation`, `capability_mismatch`, `quality_miss`, `observability_gap`, `recovery_gap`, `better_alternative_exists`, `hook_vs_model_boundary`, `task_framing_issue`, `not_a_tooling_problem`, `unknown`
+- `why_current_path_failed`: short explanation of why the current path won't work (this is a core field)
+- `best_candidate_route_id`: standard route id from `rules/routes.yaml` (this is a core field)
 
-See `docs/INTAKE_CARD.md` for detailed field explanations and examples.
+Optional inference fields:
+- `best_candidate_route_detail`: why this route is recommended
+- `prerequisites_for_switch`: lightweight checklist (e.g. `internet_access`, `repo_access`)
+- `confidence`: `high`, `medium`, or `low`
 
----
+**Rule:** `best_candidate_route_id` must be a route id from `rules/routes.yaml`, NOT a tool brand name.
 
-## Phase 2 — Search
+**Rule:** If evidence is insufficient to support an inference, leave optional fields empty. Do not invent.
 
-After the intake card is complete, search in this order:
+### Step 3: Search the Case Library
 
-1. **Local index** — `cases/index.json` (prioritize by task_category, then journey_stage, then suspected_problem_family)
-2. **Task documents** — `docs/ARCHITECTURE.md`, `rules/task_taxonomy.yaml`, `rules/journey_stages.yaml`, `rules/problem_families.yaml`
+After evidence and inference are complete, search in this order:
+
+1. **Local index** — `cases/index.json` (prioritize by task, then journey_stage, then problem_family, then route id)
+2. **Rules** — `rules/routes.yaml`, `rules/journey_stages.yaml`, `rules/problem_families.yaml`
 3. **Remote library** — GitHub issues or remote index if local data is insufficient
 
-Do NOT search only by the currently failing tool unless the intake already makes that the main signal.
+Search by structured fields, not free text.
 
----
-
-## Phase 3 — Output format
+### Step 4: Output
 
 Structure your response as:
 
-1. **Task understanding** — what the agent was trying to do
-2. **Where the blockage is** — journey_stage + observed_symptom
-3. **Most likely problem family** — suspected_problem_family
-4. **Recommended next action** — one primary choice from:
-   - `adjust_current_tool_invocation`
-   - `switch_tool_within_same_task`
-   - `inspect_environment_or_permissions`
-   - `move_to_hook_or_workflow`
-   - `reframe_task_before_retry`
-   - `ask_for_one_missing_constraint`
-   - `stop_tooling_changes_not_a_tool_issue`
-5. **Candidate tools / routes** — with brief tradeoff notes
-6. **Whether to submit a case** — only if the user agrees
+1. **Task** — what the agent was trying to do
+2. **Symptom** — what was observed
+3. **Problem family** — what category this fits
+4. **Why current path failed** — why the current approach won't work
+5. **Recommended route** — the route id and why
+6. **Candidate alternatives** — from similar cases
+7. **Case contribution** — only if the user agrees
 
-See `docs/` for the full taxonomy and reasoning framework.
+See `docs/INTAKE_CARD.md` for the full intake card format.
+See `docs/ARCHITECTURE.md` for the system design.
 
 ---
 
-## Phase 4 — Case contribution
+## Case Contribution
 
-If the user agrees, create a redacted case report.
+If the user agrees to contribute this case:
 
-### Privacy rules
+1. Build a complete v2.1 case JSON with evidence and inference
+2. Run `scripts/validate_case.py --input /tmp/case.json`
+3. If validation passes, the case is ready for submission
 
-Never include: company names, user names, private URLs, local file paths, business data, code or document contents from private work.
+### Privacy Rules
 
-### What to include
+Never include: company names, user names, private URLs, local file paths, business data, code or document contents.
 
-- platform, task_category, journey_stage, symptom
-- tool_triggered, tool_type, suspected_problem_family
-- desired_outcome, recommended_next_step, recommendation_detail
-- alternatives_considered (with better_for and tradeoff)
-- outcome, confidence
-- abstract constraints and attempted actions
-
-The case must help another agent understand the task, the blockage, and the recommended action — without exposing what private business work was being done.
-
-Run `scripts/redact.py --input /tmp/case.json` before any submission.
+See `schema/case.schema.json` for the complete v2.1 case structure.

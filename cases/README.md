@@ -1,86 +1,51 @@
-# Cases — v2 structure
+# Cases — v2.1 structure
 
-Cases are no longer organized primarily by skill.
+Cases are organized for the question an AI agent has when it is stuck:
 
-They are organized for the question an agent actually has when it is stuck:
+> "I am trying to do **this task**, I am stuck at **this stage**, and I think the issue looks like **this problem family**. What should I do next?"
 
-> “I am trying to do **this task**, I am stuck at **this stage**, and I think the issue looks like **this problem family**. What should I do next?”
+## Two-layer structure
+
+Every case has:
+
+| Layer | Purpose | Mutability |
+|---|---|---|
+| **Evidence** | Observable facts from the stuck context | Immutable |
+| **Inference** | AI-generated diagnosis and prescription | Re-computable |
 
 ## Design rule
 
-A case is not just a failure log.
+A case is not a failure log. It is a **navigation artifact** that helps another agent choose its next action.
 
-A case is a **navigation artifact** that helps another agent choose the next action.
+## Index
 
-## New organization principle
+`cases/index.json` is a lightweight routing index rebuilt by `scripts/build_index.py`.
 
-Cases should be indexed by:
+It contains:
+- `task_categories` — unique tasks
+- `route_ids` — unique recommended routes
+- `route_counts` — how many cases recommend each route
+- `problem_families` — unique problem families
+- `journey_stages` — unique journey stages
+- `cases` — lightweight entries with searchable text
 
-1. `task_category`
-2. `journey_stage`
-3. `suspected_problem_family`
-4. `tool_triggered`
-5. `recommended_next_step`
+## Adding cases
 
-## Why this changed
+1. Create a JSON file following `schema/case.schema.json` (v2.1)
+2. Place it in `cases/` or a subdirectory
+3. Run `python3 scripts/build_index.py` to rebuild the index
+4. Run `python3 scripts/validate_case.py --input your-case.json` to validate
 
-Legacy organization by `by-skill/` and `by-type/` made retrieval efficient only when the agent already knew:
-- which skill was involved
-- which failure label applied
+See `cases/templates/case.example.json` for a canonical example.
 
-Real stuck states rarely begin that cleanly.
+## Schema versions
 
-## Minimal case anatomy
-
-A strong case captures:
-
-- task
-- stage
-- symptom
-- current tool path
-- alternatives considered
-- next-step recommendation
-- abstract outcome
-- confidence
-- source pattern
-
-## Example task categories
-
-- `browse-web`
-- `read-files`
-- `transform-documents`
-- `create-presentation`
-- `analyze-data`
-- `code-editing`
-- `workflow-automation`
-- `communicate-and-publish`
-
-See `rules/task_taxonomy.yaml`.
+- **v2.1** (current): evidence/inference split, route registry, standardized route ids
+- **v2.0** (legacy): flat structure, tool-first organization
+- v2.0 cases are supported through normalization in `build_index.py` and `validate_case.py --normalize`
 
 ## Legacy migration
 
-Legacy cases can still be useful, but they should be migrated into the v2 schema.
+Use `python3 scripts/validate_case.py --input old-case.json --normalize` to convert v2.0 flat cases to v2.1 structure.
 
-A rough migration approach:
-
-- `skill_triggered` -> `tool_triggered`
-- infer `tool_type = skill`
-- infer `task_category` from the described user goal
-- map old `failure_type` into `suspected_problem_family`
-- rewrite remedy as `recommended_next_step`
-- add `alternatives_considered` when known
-
-## Index expectations
-
-`cases/index.json` should become a lightweight routing index, not a dump of all fields.
-
-It should help the agent find candidate cases by:
-- task
-- stage
-- symptom
-- current tool path
-- recommendation type
-
-## Template
-
-See `cases/templates/case.example.json`.
+See `docs/MIGRATION_GUIDE.md` for details.

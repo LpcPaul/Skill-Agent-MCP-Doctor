@@ -3,10 +3,12 @@
 AgentRX CI Self-Test
 
 Validates:
-1. YAML files are properly formatted and parseable
-2. case.schema.json is valid JSON Schema
-3. cases/templates/case.example.json matches the schema
-4. rules/*.yaml files parse correctly
+1. YAML files parse correctly
+2. schema/case.schema.json is valid
+3. routes.yaml has valid route definitions
+4. rules/*.yaml consistency with schema enums
+5. Example case passes validation
+6. Index can be rebuilt
 
 Run: python3 scripts/ci_self_test.py
 """
@@ -14,6 +16,7 @@ Run: python3 scripts/ci_self_test.py
 import json
 import sys
 import yaml
+import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -22,7 +25,6 @@ WARNINGS = []
 
 
 def check(condition, message, level="error"):
-    """Record a check result."""
     if not condition:
         if level == "error":
             ERRORS.append(message)
@@ -33,18 +35,17 @@ def check(condition, message, level="error"):
         print(f"  ✅ {message}")
 
 
-# ── 1. YAML files ──────────────────────────────────────────────
+# ── 1. YAML parsing ────────────────────────────────────────────
 
 print("\n1. YAML parsing")
 
 yaml_files = list(REPO_ROOT.rglob("*.yml")) + list(REPO_ROOT.rglob("*.yaml"))
-# Exclude node_modules, .git, etc.
 yaml_files = [f for f in yaml_files if ".git" not in str(f) and "node_modules" not in str(f)]
 
 for yf in sorted(yaml_files):
     try:
         with open(yf) as f:
-            data = yaml.safe_load(f)
+            yaml.safe_load(f)
         check(True, f"{yf.relative_to(REPO_ROOT)} — valid YAML")
     except yaml.YAMLError as e:
         check(False, f"{yf.relative_to(REPO_ROOT)} — YAML parse error: {e}")
@@ -55,104 +56,130 @@ for yf in sorted(yaml_files):
 print("\n2. JSON Schema")
 
 schema_path = REPO_ROOT / "schema" / "case.schema.json"
+schema = None
 try:
     with open(schema_path) as f:
         schema = json.load(f)
     check(True, "case.schema.json — valid JSON")
-    check("properties" in schema, "case.schema.json — has 'properties'")
-    check("required" in schema, "case.schema.json — has 'required'")
+    check(schema.get("title", "").endswith("v2.1"), "case.schema.json — title indicates v2.1")
+    check("evidence" in schema.get("properties", {}), "schema has 'evidence' object")
+    check("inference" in schema.get("properties", {}), "schema has 'inference' object")
 
-    # Check key v2 fields exist
-    required_fields = schema.get("required", [])
-    for field in ["task_category", "journey_stage", "suspected_problem_family",
-                   "recommended_next_step", "desired_outcome"]:
-        check(field in schema.get("properties", {}),
-              f"schema has '{field}' property")
-
+    required = schema.get("required", [])
+    check("schema_version" in required, "schema requires 'schema_version'")
+    check("evidence" in required, "schema requires 'evidence'")
+    check("inference" in required, "schema requires 'inference'")
 except json.JSONDecodeError as e:
     check(False, f"case.schema.json — JSON parse error: {e}")
 
 
-# ── 3. Example case matches schema ─────────────────────────────
+# ── 3. Route Registry ──────────────────────────────────────────
 
-print("\n3. Example case validation")
+print("\n3. Route Registry")
+
+routes_path = REPO_ROOT / "rules" / "routes.yaml"
+try:
+    with open(routes_path) as f:
+        routes_data = yaml.safe_load(f)
+    routes = routes_data.get("routes", {})
+    check(len(routes) >= 5, f"routes.yaml has {len(routes)} routes (min 5)")
+
+    for rid, rdef in routes.items():
+        check("label" in rdef, f"route '{rid}' has label")
+        check("description" in rdef, f"route '{rid}' has description")
+        check("applies_when" in rdef, f"route '{rid}' has applies_when")
+
+    # Check route ids match schema enum
+    if schema:
+        schema_routes = set(schema["properties"].get("inference", {}).get("properties", {}).get("best_candidate_route_id", {}).get("enum", []))
+        yaml_routes = set(routes.keys())
+        check(schema_routes == yaml_routes, f"schema route enum matches routes.yaml ({len(schema_routes)} == {len(yaml_routes)})")
+except yaml.YAMLError as e:
+    check(False, f"routes.yaml — YAML parse error: {e}")
+
+
+# ── 4. Rules consistency ───────────────────────────────────────
+
+print("\n4. Rules consistency")
+
+rules_dir = REPO_ROOT / "rules"
+if schema:
+    # Journey stages
+    schema_stages = set(schema["properties"].get("inference", {}).get("properties", {}).get("journey_stage", {}).get("enum", []))
+    try:
+        with open(rules_dir / "journey_stages.yaml") as f:
+            rules_stages = set(yaml.safe_load(f).get("journey_stages", {}).keys())
+        check(schema_stages == rules_stages, f"journey_stage enum consistent (schema={len(schema_stages)}, rules={len(rules_stages)})")
+    except Exception as e:
+        check(False, f"journey_stages.yaml comparison failed: {e}", level="warning")
+
+    # Problem families
+    schema_families = set(schema["properties"].get("inference", {}).get("properties", {}).get("problem_family", {}).get("enum", []))
+    try:
+        with open(rules_dir / "problem_families.yaml") as f:
+            rules_families = set(yaml.safe_load(f).get("problem_families", {}).keys())
+        check(schema_families == rules_families, f"problem_family enum consistent (schema={len(schema_families)}, rules={len(rules_families)})")
+    except Exception as e:
+        check(False, f"problem_families.yaml comparison failed: {e}", level="warning")
+
+
+# ── 5. Example case validation ─────────────────────────────────
+
+print("\n5. Example case validation")
 
 example_path = REPO_ROOT / "cases" / "templates" / "case.example.json"
 if example_path.exists():
     try:
         with open(example_path) as f:
             example = json.load(f)
-        check(True, "case.example.json — valid JSON")
+        check(example.get("schema_version") == "2.1", f"example case schema_version is '2.1' (got: {example.get('schema_version')})")
+        check("evidence" in example, "example has 'evidence' object")
+        check("inference" in example, "example has 'inference' object")
 
-        # Check required fields
-        if "properties" in schema:
-            for field in schema.get("required", []):
-                check(field in example, f"example has required field '{field}'")
-
-        # Check no unknown fields (additionalProperties: false)
-        if schema.get("additionalProperties") == False:
-            allowed = set(schema.get("properties", {}).keys())
-            extra = set(example.keys()) - allowed
-            check(len(extra) == 0, f"example has no extra fields (found: {extra})")
+        # Validate with validate_case.py
+        result = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "scripts" / "validate_case.py"), "--input", str(example_path)],
+            capture_output=True, text=True
+        )
+        check(result.returncode == 0, f"validate_case.py passed: {result.stdout.strip()}")
+        if result.returncode != 0:
+            print(f"    stderr: {result.stderr.strip()}")
     except json.JSONDecodeError as e:
         check(False, f"case.example.json — JSON parse error: {e}")
 else:
     check(False, "cases/templates/case.example.json — file not found")
 
 
-# ── 4. Rules files ─────────────────────────────────────────────
+# ── 6. Index rebuild ───────────────────────────────────────────
 
-print("\n4. Rules validation")
+print("\n6. Index rebuild")
 
-rules_dir = REPO_ROOT / "rules"
-expected_rules = ["task_taxonomy.yaml", "journey_stages.yaml",
-                  "problem_families.yaml", "failure_types.yaml"]
+result = subprocess.run(
+    [sys.executable, str(REPO_ROOT / "scripts" / "build_index.py")],
+    capture_output=True, text=True
+)
+check(result.returncode == 0, f"build_index.py succeeded")
+if result.returncode == 0:
+    for line in result.stdout.strip().split("\n"):
+        print(f"    {line}")
 
-for rule_file in expected_rules:
-    rp = rules_dir / rule_file
-    if rp.exists():
+    # Verify index was created
+    index_path = REPO_ROOT / "cases" / "index.json"
+    if index_path.exists():
         try:
-            with open(rp) as f:
-                data = yaml.safe_load(f)
-            check(True, f"rules/{rule_file} — valid YAML")
-            check(isinstance(data, dict) and len(data) > 0,
-                  f"rules/{rule_file} — has content")
-        except yaml.YAMLError as e:
-            check(False, f"rules/{rule_file} — YAML parse error: {e}")
-    else:
-        check(False, f"rules/{rule_file} — file not found")
+            with open(index_path) as f:
+                index = json.load(f)
+            check(index.get("schema_version") == "2.1", "index schema_version is '2.1'")
+            check("route_ids" in index, "index has 'route_ids'")
+            check("route_counts" in index, "index has 'route_counts'")
+            check("cases" in index, "index has 'cases'")
+        except json.JSONDecodeError as e:
+            check(False, f"index.json — JSON parse error: {e}")
+if result.returncode != 0:
+    print(f"    stderr: {result.stderr.strip()}")
 
 
-# ── 5. Cross-file consistency ──────────────────────────────────
-
-print("\n5. Cross-file consistency")
-
-# journey_stages in schema vs rules
-if "properties" in schema and rules_dir.exists():
-    schema_stages = set(schema["properties"].get("journey_stage", {}).get("enum", []))
-    try:
-        with open(rules_dir / "journey_stages.yaml") as f:
-            data = yaml.safe_load(f)
-            rules_stages = set(data.get("journey_stages", {}).keys())
-        check(schema_stages == rules_stages,
-              f"journey_stage enum matches journey_stages.yaml "
-              f"(schema={len(schema_stages)}, rules={len(rules_stages)})")
-    except Exception as e:
-        check(False, f"journey_stages.yaml comparison failed: {e}", level="warning")
-
-    schema_families = set(schema["properties"].get("suspected_problem_family", {}).get("enum", []))
-    try:
-        with open(rules_dir / "problem_families.yaml") as f:
-            data = yaml.safe_load(f)
-            rules_families = set(data.get("problem_families", {}).keys())
-        check(schema_families == rules_families,
-              f"suspected_problem_family enum matches problem_families.yaml "
-              f"(schema={len(schema_families)}, rules={len(rules_families)})")
-    except Exception as e:
-        check(False, f"problem_families.yaml comparison failed: {e}", level="warning")
-
-
-# ── Summary ────────────────────────────────────────────────────
+# ── Summary ───────────────────────────────────────────────────
 
 print("\n" + "=" * 50)
 if ERRORS:
@@ -166,5 +193,5 @@ elif WARNINGS:
         print(f"   WARNING: {w}")
     sys.exit(0)
 else:
-    print(f"✅ All {sum(1 for _ in yaml_files) + 10} checks passed")
+    print(f"✅ All checks passed")
     sys.exit(0)

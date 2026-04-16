@@ -1,66 +1,72 @@
 {
-  "case_id": "2026-04-16-browse-web-001",
-  "timestamp": "2026-04-16T00:00:00Z",
-  "platform": "claude-code",
-  "task_category": "browse-web",
-  "task_goal": "Extract main content from a public webpage.",
-  "journey_stage": "execute-task",
-  "observed_symptom": "The page opened, but the extracted content was incomplete.",
-  "symptom_tags": [
-    "partial-content",
-    "dynamic-page"
-  ],
-  "tool_triggered": "browser-cdp",
-  "tool_type": "skill",
-  "other_tools_in_path": [
-    {
-      "name": "web_fetch",
-      "type": "builtin",
-      "role": "candidate alternative"
+  "schema_version": "2.1",
+  "id": "2026-04-16-browse-web-001",
+  "title": "browse-web execute-task capability_mismatch",
+  "summary": "Agent tried to extract content from a dynamically rendered page using a tool that only captures static HTML. Switching to a web-capable route resolved the issue.",
+  "created_at": "2026-04-16T00:00:00Z",
+  "tags": ["browse-web", "execute-task", "capability_mismatch", "dynamic-rendering"],
+  "evidence": {
+    "task": "browse-web",
+    "desired_outcome": "Extract main content from a public webpage.",
+    "attempted_path": {
+      "tool": "browser-cdp",
+      "tool_type": "skill",
+      "other_tools": [
+        {
+          "name": "web_fetch",
+          "type": "builtin",
+          "role": "candidate alternative"
+        },
+        {
+          "name": "playwright-mcp",
+          "type": "mcp",
+          "role": "candidate alternative"
+        }
+      ]
     },
-    {
-      "name": "playwright-mcp",
-      "type": "mcp",
-      "role": "candidate alternative"
-    }
-  ],
-  "suspected_problem_family": "capability_mismatch",
-  "constraints": {
-    "requires_login": false,
-    "requires_dynamic_render": true,
-    "requires_local_filesystem": false,
-    "requires_network": true,
-    "requires_deterministic_execution": false,
-    "notes": "The target page appears to rely on client-side rendering."
+    "symptom": "The page opened, but the extracted content was incomplete. Only the initial HTML shell was captured.",
+    "symptom_tags": ["partial-content", "dynamic-page"],
+    "context": "The target page appears to rely on client-side JavaScript rendering to populate its main content area.",
+    "environment": {
+      "platform": "claude-code",
+      "requires_login": false,
+      "requires_dynamic_render": true,
+      "requires_local_filesystem": false,
+      "requires_network": true,
+      "requires_deterministic_execution": false,
+      "notes": "Client-side rendering detected."
+    },
+    "failed_step": "DOM content extraction returned empty main content area",
+    "artifacts_used": ["HTML page", "public URL"],
+    "reproduction_steps": [
+      "Used browser-cdp skill to open the page",
+      "Extracted HTML content — only static shell captured",
+      "Retried extraction without changing the rendering strategy"
+    ]
   },
-  "attempted_actions": [
-    "Used current browser skill once",
-    "Retried extraction without changing the rendering strategy"
-  ],
-  "diagnosis_summary": "The current path is plausible for simple browsing, but it is a poor fit for content extraction on a dynamically rendered page. The agent is repeating the same route instead of switching to a capability better suited for render-dependent content.",
-  "recommended_next_step": "switch_tool_within_same_task",
-  "recommendation_detail": "If the page is public and simple, try a built-in fetch path first. If rendering is required, switch to a browser path with stronger support for dynamic pages. If login becomes necessary, use a plugin or browser session route that preserves authentication state.",
-  "alternatives_considered": [
-    {
-      "name": "web_fetch",
-      "type": "builtin",
-      "better_for": "Simple public pages without rendering needs",
-      "tradeoff": "May fail on client-rendered pages"
-    },
-    {
-      "name": "playwright-mcp",
-      "type": "mcp",
-      "better_for": "Dynamic pages and richer interaction",
-      "tradeoff": "Requires stronger setup/configuration"
-    }
-  ],
-  "outcome": "partially_resolved",
-  "confidence": "medium",
-  "source_reference": "public-discussion-pattern",
+  "inference": {
+    "journey_stage": "execute-task",
+    "problem_family": "capability_mismatch",
+    "why_current_path_failed": "The current tool only captures static HTML. The page requires client-side JavaScript rendering to populate its content, which this tool does not execute.",
+    "best_candidate_route_id": "switch_to_alternative_tool_path",
+    "best_candidate_route_detail": "Switch to a browser path with stronger dynamic rendering support. playwright-mcp is a good candidate for this task as it can execute JavaScript and interact with the rendered DOM. If the page is simpler, web_fetch may suffice for static content.",
+    "prerequisites_for_switch": [
+      "internet_access",
+      "repo_access"
+    ],
+    "confidence": "medium"
+  },
+  "resolution": {
+    "outcome": "partially_resolved",
+    "follow_up_notes": "Switched to playwright-mcp which successfully extracted the dynamic content. Trade-off: higher setup cost compared to the original skill."
+  },
   "verified": false,
   "related_cases": [],
   "legacy_mapping": {
+    "legacy_schema_version": "2.0",
     "legacy_failure_type": "wrong_skill_selected",
-    "legacy_skill_triggered": "browser-cdp"
+    "legacy_skill_triggered": "browser-cdp",
+    "legacy_task_category": "browse-web",
+    "legacy_journey_stage": "execute-task"
   }
 }

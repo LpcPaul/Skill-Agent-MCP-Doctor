@@ -1,0 +1,99 @@
+# Route Registry — standard route ids for best_candidate_route_id
+#
+# These are action paths, not specific tool brands.
+# Every case's inference.best_candidate_route_id must reference one of these.
+#
+# Design rules:
+# - id: stable, short, machine-retrievable
+# - label: human-readable
+# - description: AI-executable guidance
+# - applies_when: signals that make this route the likely best choice
+# - prerequisites: what must be true for this route to work
+
+routes:
+  switch_to_web_research:
+    label: "Switch to web research"
+    description: "The current path cannot access or extract web content effectively. A web-capable route (search, fetch, or browse) is better suited."
+    applies_when:
+      - task involves finding or extracting information from the internet
+      - current tool has no web access or web access is insufficient
+    prerequisites:
+      - internet_access
+
+  switch_to_official_docs:
+    label: "Switch to official documentation lookup"
+    description: "The agent is blocked by missing knowledge about an API, framework, or tool. Official docs are the authoritative source."
+    applies_when:
+      - task involves integrating with a third-party system
+      - current failure is due to incorrect usage assumptions
+    prerequisites:
+      - internet_access
+
+  switch_to_local_file_inspection:
+    label: "Switch to local file inspection"
+    description: "The task requires reading or modifying files on the local filesystem. The current path does not have filesystem access."
+    applies_when:
+      - task involves local files
+      - current tool cannot read/write local paths
+    prerequisites:
+      - repo_access
+
+  switch_to_api_or_connector_access:
+    label: "Switch to API or connector access"
+    description: "The task requires authenticated or structured access to an external service. Direct API or an MCP connector is more appropriate."
+    applies_when:
+      - task involves interacting with an external service
+      - current tool only provides generic or unstructured access
+    prerequisites:
+      - api_credentials_available
+      - internet_access
+
+  switch_to_environment_debugging:
+    label: "Switch to environment debugging"
+    description: "The tool path is blocked by runtime, permission, or dependency issues. Debugging the environment is the prerequisite for progress."
+    applies_when:
+      - symptom indicates permission denied, missing package, or path error
+      - retrying with the same tool produces the same error
+    prerequisites:
+      - repo_access
+
+  request_missing_input:
+    label: "Request missing input from user"
+    description: "The agent cannot proceed because a required piece of information is missing. Asking the user is the most efficient next step."
+    applies_when:
+      - task is underspecified
+      - multiple valid approaches exist and the choice depends on user preference
+    prerequisites: []
+
+  decompose_task_first:
+    label: "Decompose the task before proceeding"
+    description: "The task is too complex for a single tool path. Breaking it into sub-tasks and addressing them sequentially is needed."
+    applies_when:
+      - the task has multiple independent sub-goals
+      - current tool is only suitable for part of the work
+    prerequisites: []
+
+  switch_to_repro_minimization:
+    label: "Switch to reproduction minimization"
+    description: "The failure is intermittent or complex. Creating a minimal reproduction case will help isolate the root cause."
+    applies_when:
+      - the failure is non-deterministic
+      - the error message is ambiguous or points to multiple causes
+    prerequisites:
+      - repo_access
+
+  switch_to_schema_or_format_validation:
+    label: "Switch to schema or format validation"
+    description: "The output is structurally wrong (wrong format, missing fields, invalid schema). A validation-focused route is needed."
+    applies_when:
+      - the tool runs but the output does not match the expected format
+      - downstream consumers reject the output
+    prerequisites: []
+
+  switch_to_alternative_tool_path:
+    label: "Switch to an alternative tool path"
+    description: "The current tool path is a poor fit for the task. A different capability within the same task category should be used."
+    applies_when:
+      - the task is clear but the tool's capability does not match
+      - alternative tools exist for this task category
+    prerequisites: []

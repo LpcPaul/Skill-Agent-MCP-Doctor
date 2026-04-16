@@ -1,42 +1,19 @@
 {
-  "version": "2.0.0-alpha",
+  "schema_version": "2.1",
   "project_name": "agentrx",
-  "generated_at": "2026-04-16T00:00:00Z",
+  "generated_at": "2026-04-16T12:44:33Z",
   "navigation_order": [
-    "task_category",
+    "task",
     "journey_stage",
-    "suspected_problem_family",
-    "tool_triggered",
-    "recommended_next_step"
+    "problem_family",
+    "best_candidate_route_id"
   ],
-  "task_categories": [
-    "browse-web",
-    "read-files",
-    "transform-documents",
-    "create-presentation",
-    "analyze-data",
-    "code-editing",
-    "workflow-automation",
-    "communicate-and-publish",
-    "create-visual-assets",
-    "search-and-compare-tools",
-    "local-environment-setup",
-    "monitor-and-check"
-  ],
-  "problem_families": [
-    "environment",
-    "configuration",
-    "invocation",
-    "capability_mismatch",
-    "quality_miss",
-    "observability_gap",
-    "recovery_gap",
-    "better_alternative_exists",
-    "hook_vs_model_boundary",
-    "task_framing_issue",
-    "not_a_tooling_problem",
-    "unknown"
-  ],
+  "schema_versions": [],
+  "task_categories": [],
+  "route_ids": [],
+  "route_counts": {},
+  "problem_families": [],
+  "journey_stages": [],
   "case_count": 0,
   "cases": []
 }
