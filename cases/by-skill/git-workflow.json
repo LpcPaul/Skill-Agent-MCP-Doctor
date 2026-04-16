@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new15",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "git-workflow",
+    "failure_type": "wrong_skill_selected",
+    "failure_signature": "User asked to review code changes but git-workflow skill was triggered for code review instead of dedicated review skill",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User manually invoked review skill instead",
+    "remedy": "git-workflow should handle branching, merging, committing, and PR creation. Code review should route to dedicated review skill. Update descriptions to separate these concerns.",
+    "remedy_type": "switch_skill",
+    "confidence": "high",
+    "verified": true
+  }
+]

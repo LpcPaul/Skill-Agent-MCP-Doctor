@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new10",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-ai",
+    "skill_triggered": "xlsx",
+    "failure_type": "tool_error",
+    "failure_signature": "xlsx skill threw error when trying to write a spreadsheet with cells containing mixed unicode characters and emoji",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux"
+    },
+    "user_correction": "User simplified data to ASCII-only and retried",
+    "remedy": "xlsx skill should handle unicode normalization before writing cells. Test with diverse character sets including emoji, CJK, and RTL scripts.",
+    "remedy_type": "change_skill_params",
+    "confidence": "high",
+    "verified": true
+  }
+]

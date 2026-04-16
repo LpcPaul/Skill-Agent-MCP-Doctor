@@ -1,0 +1,26 @@
+[
+  {
+    "case_id": "2026-04-15-new07",
+    "skill_triggered": "test-driven-development",
+    "failure_signature": "TDD skill generated tests but they lacked edge case coverage and assertions were incomplete — tests passed but did not verify behavior",
+    "remedy": "TDD skill should enforce a checklist: test happy path, edge cases, error conditions, and boundary values. Include assertion templates for common patterns.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new09",
+    "skill_triggered": "capability-evolver",
+    "failure_signature": "Evolver skill generated overly complex prompt instructions after multiple evolution cycles, causing agent behavior to become unpredictable",
+    "remedy": "Cap evolution iterations (max 5-7). After each iteration, run a validation check: does the evolved skill still produce stable output? Stop if regression detected.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new19",
+    "skill_triggered": "api-design",
+    "failure_signature": "api-design skill generated REST endpoints but omitted error response schemas, pagination conventions, and versioning strategy",
+    "remedy": "api-design skill should include a mandatory output template: endpoints, request/response schemas, error format, pagination, auth, versioning. Checklist-driven generation.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "case_id": "2026-04-15-new01",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "browser-cdp",
+    "failure_type": "tool_error",
+    "failure_signature": "Browser CDP connection failed when trying to attach to Chrome instance — browser not launched with remote-debugging-port flag",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos",
+      "context_note": "headless browser automation"
+    },
+    "user_correction": "User launched Chrome manually with --remote-debugging-port=9222 before invoking skill",
+    "remedy": "browser-cdp should check if a debuggable browser instance exists before connecting. If not found, offer to launch one automatically with correct flags.",
+    "remedy_type": "change_skill_params",
+    "confidence": "high",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new02",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "browser-cdp",
+    "failure_type": "environment_issue",
+    "failure_signature": "CDP skill failed to connect because Chrome sandbox environment lacked required dependencies (libx11, libxcomposite) for headless mode",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux",
+      "context_note": "CI/CD runner environment"
+    },
+    "user_correction": "Installed missing system packages via apt before running skill",
+    "remedy": "Skill should detect missing browser dependencies and provide installation instructions, or gracefully degrade to a simpler scraping method.",
+    "remedy_type": "not_skill_issue",
+    "confidence": "high",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new18",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-ai",
+    "skill_triggered": "browser-cdp",
+    "failure_type": "context_overflow",
+    "failure_signature": "CDP skill instructions lost during multi-page scraping session — agent forgot pagination handling rules and started re-scraping same pages",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux",
+      "context_note": "scraping 50+ pages in single session"
+    },
+    "user_correction": "User broke task into smaller batches of 10 pages each",
+    "remedy": "Web scraping tasks should be chunked into sub-sessions. Skill should maintain a state file (JSON) tracking progress rather than relying on conversation context.",
+    "remedy_type": "change_skill_params",
+    "confidence": "high",
+    "verified": true
+  }
+]

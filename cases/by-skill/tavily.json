@@ -1,0 +1,53 @@
+[
+  {
+    "case_id": "2026-04-15-new03",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "tavily",
+    "failure_type": "wrong_skill_selected",
+    "failure_signature": "User asked to search for local project files, but tavily web search skill was triggered instead of using local file search or grep",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User clarified they wanted to search within the project codebase, not the web",
+    "remedy": "tavily should only trigger when user explicitly mentions web search, online research, or finding information on the internet. Local file/code search should route to grep or file search tools.",
+    "remedy_type": "switch_skill",
+    "confidence": "high",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new04",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-ai",
+    "skill_triggered": "tavily",
+    "failure_type": "tool_error",
+    "failure_signature": "Web search API returned rate limit exceeded error after multiple consecutive queries in a single session",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux"
+    },
+    "user_correction": "User waited a few minutes and retried with fewer queries",
+    "remedy": "Implement query batching and caching within the skill. Warn user when approaching rate limits and suggest consolidating searches.",
+    "remedy_type": "change_skill_params",
+    "confidence": "medium",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new16",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "openclaw",
+    "skill_triggered": "tavily",
+    "failure_type": "description_mismatch",
+    "failure_signature": "tavily skill description mentioned 'web search' but did not indicate it also supports extracting page content, causing user to load separate scraping skill unnecessarily",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux"
+    },
+    "user_correction": "User discovered tavily had content extraction after loading both skills",
+    "remedy": "tavily description should list all capabilities: search, extract, summarize pages. Avoid forcing users to load redundant scraping skills.",
+    "remedy_type": "update_description",
+    "confidence": "high",
+    "verified": true
+  }
+]

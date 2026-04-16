@@ -1,0 +1,26 @@
+[
+  {
+    "case_id": "2026-04-15-seed04",
+    "skill_triggered": "frontend-design",
+    "failure_signature": "User asked to build a web component but did not use explicit UI/design keywords, so the frontend-design skill was not auto-loaded",
+    "remedy": "frontend-design description could be broadened to trigger on 'build a component', 'create a page', 'make a form', not just explicit design/styling keywords.",
+    "remedy_type": "update_description",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new11",
+    "skill_triggered": "pdf",
+    "failure_signature": "User asked to fill out a PDF form but skill was not triggered because request used 'fill in' instead of 'populate' or 'create'",
+    "remedy": "pdf skill description should include 'fill in form', 'complete PDF', 'add data to PDF' as trigger phrases alongside existing 'populate' keywords.",
+    "remedy_type": "update_description",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new14",
+    "skill_triggered": "none",
+    "failure_signature": "User asked to summarize a long conversation into structured notes but no summarization skill was loaded or triggered",
+    "remedy": "A summarization/notes skill should trigger on keywords like 'summarize', 'key takeaways', 'action items', 'meeting notes'. Consider adding this skill.",
+    "remedy_type": "update_description",
+    "verified": true
+  }
+]

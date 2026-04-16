@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new13",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "markdown",
+    "failure_type": "skill_conflict",
+    "failure_signature": "Both markdown and docx skills competed when user asked to 'write a report' — ambiguous whether inline text or file deliverable was expected",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User clarified they wanted a .docx file, not inline markdown",
+    "remedy": "markdown skill should explicitly exclude tasks requesting formal document files. docx should claim 'report', 'document', 'deliverable' keywords more aggressively.",
+    "remedy_type": "update_description",
+    "confidence": "high",
+    "verified": true
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "case_id": "2026-04-15-new16",
+    "skill_triggered": "tavily",
+    "failure_signature": "tavily skill description mentioned 'web search' but did not indicate it also supports extracting page content, causing user to load separate scraping skill unnecessarily",
+    "remedy": "tavily description should list all capabilities: search, extract, summarize pages. Avoid forcing users to load redundant scraping skills.",
+    "remedy_type": "update_description",
+    "verified": true
+  }
+]

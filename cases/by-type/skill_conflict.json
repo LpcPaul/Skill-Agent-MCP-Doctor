@@ -1,0 +1,18 @@
+[
+  {
+    "case_id": "2026-04-15-new05",
+    "skill_triggered": "gog-workspace",
+    "failure_signature": "Both gog-workspace and generic file-management skills triggered for a task involving organizing project files within a workspace directory",
+    "remedy": "gog-workspace description should explicitly claim file organization within workspace directories and set higher priority than generic file skills.",
+    "remedy_type": "update_description",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new13",
+    "skill_triggered": "markdown",
+    "failure_signature": "Both markdown and docx skills competed when user asked to 'write a report' — ambiguous whether inline text or file deliverable was expected",
+    "remedy": "markdown skill should explicitly exclude tasks requesting formal document files. docx should claim 'report', 'document', 'deliverable' keywords more aggressively.",
+    "remedy_type": "update_description",
+    "verified": true
+  }
+]

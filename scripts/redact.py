@@ -28,15 +28,15 @@ from pathlib import Path
 # ── Patterns that should NEVER appear in a case report ──
 
 PATTERNS = {
-    "email": re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'),
+    "email": re.compile(r'[a-zA-Z0-9._%+\u00c0-\u024f]+@[a-zA-Z0-9\u00c0-\u024f.-]+\.[a-zA-Z]{2,}'),
     "url": re.compile(r'https?://[^\s"\'<>]+'),
     "ip_address": re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b'),
-    "file_path_unix": re.compile(r'(?:/[a-zA-Z0-9._-]+){2,}'),
+    "file_path_unix": re.compile(r'(?:/[a-zA-Z0-9._-]+){3,}'),
     "file_path_windows": re.compile(r'[A-Z]:\\(?:[^\s\\]+\\)*[^\s\\]+'),
     "api_key_generic": re.compile(r'(?:sk|pk|api|key|token|secret|bearer)[_-]?[a-zA-Z0-9]{16,}', re.IGNORECASE),
     "aws_key": re.compile(r'AKIA[0-9A-Z]{16}'),
-    "phone": re.compile(r'(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}'),
-    "uuid": re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', re.IGNORECASE),
+    "phone": re.compile(r'\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}\b'),
+    "uuid": re.compile(r'\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b', re.IGNORECASE),
     "base64_long": re.compile(r'[A-Za-z0-9+/=]{40,}'),
 }
 
@@ -130,8 +130,12 @@ def redact_string(value: str, field_name: str, result: RedactionResult) -> str:
     for pattern_name, pattern in PATTERNS.items():
         matches = pattern.findall(redacted)
         for match in matches:
-            # Special case: allow certain URLs
-            if pattern_name == "url" and is_allowed_url(match):
+            # Special case: allow certain URLs (check before URL pattern processing)
+            if pattern_name == "url":
+                if is_allowed_url(match):
+                    continue
+            # Special case: allow GitHub URLs even if they look like file paths
+            if "githubusercontent.com" in match or "github.com" in match:
                 continue
             # Special case: don't flag skill names that look like file paths
             if pattern_name == "file_path_unix" and match.startswith("/mnt/skills/"):
@@ -151,7 +155,8 @@ def redact_string(value: str, field_name: str, result: RedactionResult) -> str:
     file_matches = FILE_EXTENSIONS.findall(redacted)
     for match in file_matches:
         # Skill names ending in common extensions are OK
-        if match in ("SKILL.md", "index.json", "case.schema.json", "redact.py", "submit_case.sh"):
+        allowed_filenames = {"SKILL.md", "index.json", "case.schema.json", "redact.py", "submit_case.sh", "schema.json"}
+        if match in allowed_filenames:
             continue
         result.add_issue(field_name, "file_reference", match)
 

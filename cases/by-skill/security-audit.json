@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new17",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "security-audit",
+    "failure_type": "should_use_hook",
+    "failure_signature": "security-audit skill was model-optional and skipped during urgent deployments, but security checks should be mandatory before any release",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User added security scan as mandatory CI step instead of skill",
+    "remedy": "Security auditing must never be model-optional. Convert to a pre-deployment hook or CI gate. Skills with security implications should use disable-model-invocation: true at minimum.",
+    "remedy_type": "use_hook",
+    "confidence": "high",
+    "verified": true
+  }
+]

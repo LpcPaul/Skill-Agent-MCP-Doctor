@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new19",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "api-design",
+    "failure_type": "output_quality",
+    "failure_signature": "api-design skill generated REST endpoints but omitted error response schemas, pagination conventions, and versioning strategy",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User manually added missing API design standards",
+    "remedy": "api-design skill should include a mandatory output template: endpoints, request/response schemas, error format, pagination, auth, versioning. Checklist-driven generation.",
+    "remedy_type": "change_skill_params",
+    "confidence": "medium",
+    "verified": true
+  }
+]

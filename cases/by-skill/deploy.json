@@ -1,0 +1,16 @@
+[
+  {
+    "case_id": "2026-04-15-seed06",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "deploy",
+    "failure_type": "should_use_hook",
+    "failure_signature": "Deployment skill was auto-triggered by model when code appeared ready, but deployment should only happen with explicit user consent",
+    "environment": { "model": "claude-sonnet-4-6", "os": "macos" },
+    "user_correction": "Added disable-model-invocation: true to deploy skill frontmatter",
+    "remedy": "Any skill with side effects (deploy, send message, publish, commit) should have disable-model-invocation: true. Consider converting to a hook if it must run at a specific lifecycle point.",
+    "remedy_type": "restrict_auto_trigger",
+    "confidence": "high",
+    "verified": true
+  }
+]

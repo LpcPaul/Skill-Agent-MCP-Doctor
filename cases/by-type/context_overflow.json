@@ -1,0 +1,18 @@
+[
+  {
+    "case_id": "2026-04-15-new08",
+    "skill_triggered": "frontend-design",
+    "failure_signature": "Frontend skill instructions degraded in long coding session — agent forgot to apply responsive design and accessibility requirements mid-project",
+    "remedy": "Frontend skill should be invoked in focused sub-sessions per component rather than one long session. Keep SKILL.md concise with a checklist of non-negotiable requirements.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new18",
+    "skill_triggered": "browser-cdp",
+    "failure_signature": "CDP skill instructions lost during multi-page scraping session — agent forgot pagination handling rules and started re-scraping same pages",
+    "remedy": "Web scraping tasks should be chunked into sub-sessions. Skill should maintain a state file (JSON) tracking progress rather than relying on conversation context.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  }
+]

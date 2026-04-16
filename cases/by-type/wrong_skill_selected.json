@@ -1,0 +1,50 @@
+[
+  {
+    "case_id": "2026-04-15-seed01",
+    "skill_triggered": "xlsx",
+    "failure_signature": "User requested a text-format report or summary, but xlsx skill was triggered due to keyword 'table' appearing in the request",
+    "remedy": "xlsx should only trigger when the user explicitly requests a spreadsheet file, Excel, or .xlsx. Mentions of 'table' alone should default to markdown inline tables.",
+    "remedy_type": "switch_skill",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-seed02",
+    "skill_triggered": "pdf",
+    "failure_signature": "User asked to read or extract content from a PDF file, but the pdf skill (creation/manipulation) was triggered instead of pdf-reading skill",
+    "remedy": "Distinguish between pdf (create/merge/fill/encrypt) and pdf-reading (extract/read/inspect). When user says 'read', 'extract', 'what does this PDF say', route to pdf-reading.",
+    "remedy_type": "switch_skill",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-seed03",
+    "skill_triggered": "docx",
+    "failure_signature": "User requested a brief written summary or explanation, but docx skill was triggered, producing a full Word document when inline text would have sufficed",
+    "remedy": "docx should only trigger when user explicitly asks for a Word document, .docx file, or a formal deliverable. Brief summaries, explanations, and conversational content should remain inline.",
+    "remedy_type": "switch_skill",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new03",
+    "skill_triggered": "tavily",
+    "failure_signature": "User asked to search for local project files, but tavily web search skill was triggered instead of using local file search or grep",
+    "remedy": "tavily should only trigger when user explicitly mentions web search, online research, or finding information on the internet. Local file/code search should route to grep or file search tools.",
+    "remedy_type": "switch_skill",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new15",
+    "skill_triggered": "git-workflow",
+    "failure_signature": "User asked to review code changes but git-workflow skill was triggered for code review instead of dedicated review skill",
+    "remedy": "git-workflow should handle branching, merging, committing, and PR creation. Code review should route to dedicated review skill. Update descriptions to separate these concerns.",
+    "remedy_type": "switch_skill",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new20",
+    "skill_triggered": "data-visualization",
+    "failure_signature": "User asked for a simple inline data table but data-visualization skill was triggered, generating a full chart when tabular output sufficed",
+    "remedy": "data-visualization should only trigger when user explicitly asks for charts, graphs, plots, or visual analysis. Simple data display should use markdown tables.",
+    "remedy_type": "switch_skill",
+    "verified": true
+  }
+]

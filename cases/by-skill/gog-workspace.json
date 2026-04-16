@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "2026-04-15-new05",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "openclaw",
+    "skill_triggered": "gog-workspace",
+    "failure_type": "skill_conflict",
+    "failure_signature": "Both gog-workspace and generic file-management skills triggered for a task involving organizing project files within a workspace directory",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux",
+      "context_note": "multiple workspace skills loaded"
+    },
+    "user_correction": "User manually selected gog-workspace to handle the task",
+    "remedy": "gog-workspace description should explicitly claim file organization within workspace directories and set higher priority than generic file skills.",
+    "remedy_type": "update_description",
+    "confidence": "high",
+    "verified": true
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "2026-04-15-new08",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "cursor",
+    "skill_triggered": "frontend-design",
+    "failure_type": "context_overflow",
+    "failure_signature": "Frontend skill instructions degraded in long coding session — agent forgot to apply responsive design and accessibility requirements mid-project",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos",
+      "context_note": "40+ turn conversation, multiple components being built"
+    },
+    "user_correction": "User re-invoked the skill to refresh requirements",
+    "remedy": "Frontend skill should be invoked in focused sub-sessions per component rather than one long session. Keep SKILL.md concise with a checklist of non-negotiable requirements.",
+    "remedy_type": "change_skill_params",
+    "confidence": "medium",
+    "verified": true
+  }
+]

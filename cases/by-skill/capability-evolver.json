@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "2026-04-15-new09",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "capability-evolver",
+    "failure_type": "output_quality",
+    "failure_signature": "Evolver skill generated overly complex prompt instructions after multiple evolution cycles, causing agent behavior to become unpredictable",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux",
+      "context_note": "evolution loop ran for 15+ iterations"
+    },
+    "user_correction": "User reset to original skill and applied a single targeted evolution step",
+    "remedy": "Cap evolution iterations (max 5-7). After each iteration, run a validation check: does the evolved skill still produce stable output? Stop if regression detected.",
+    "remedy_type": "change_skill_params",
+    "confidence": "high",
+    "verified": true
+  }
+]

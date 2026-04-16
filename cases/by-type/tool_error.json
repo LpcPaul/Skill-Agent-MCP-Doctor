@@ -1,0 +1,26 @@
+[
+  {
+    "case_id": "2026-04-15-new01",
+    "skill_triggered": "browser-cdp",
+    "failure_signature": "Browser CDP connection failed when trying to attach to Chrome instance — browser not launched with remote-debugging-port flag",
+    "remedy": "browser-cdp should check if a debuggable browser instance exists before connecting. If not found, offer to launch one automatically with correct flags.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new04",
+    "skill_triggered": "tavily",
+    "failure_signature": "Web search API returned rate limit exceeded error after multiple consecutive queries in a single session",
+    "remedy": "Implement query batching and caching within the skill. Warn user when approaching rate limits and suggest consolidating searches.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new10",
+    "skill_triggered": "xlsx",
+    "failure_signature": "xlsx skill threw error when trying to write a spreadsheet with cells containing mixed unicode characters and emoji",
+    "remedy": "xlsx skill should handle unicode normalization before writing cells. Test with diverse character sets including emoji, CJK, and RTL scripts.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  }
+]

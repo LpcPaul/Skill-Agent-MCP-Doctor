@@ -1,0 +1,26 @@
+[
+  {
+    "case_id": "2026-04-15-seed06",
+    "skill_triggered": "deploy",
+    "failure_signature": "Deployment skill was auto-triggered by model when code appeared ready, but deployment should only happen with explicit user consent",
+    "remedy": "Any skill with side effects (deploy, send message, publish, commit) should have disable-model-invocation: true. Consider converting to a hook if it must run at a specific lifecycle point.",
+    "remedy_type": "restrict_auto_trigger",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new06",
+    "skill_triggered": "test-driven-development",
+    "failure_signature": "TDD skill was optionally triggered but user wanted tests to run automatically before every commit, not just when explicitly asked",
+    "remedy": "Test execution that must happen deterministically (before commits, on file save) should be implemented as a hook, not an optional skill.",
+    "remedy_type": "use_hook",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new17",
+    "skill_triggered": "security-audit",
+    "failure_signature": "security-audit skill was model-optional and skipped during urgent deployments, but security checks should be mandatory before any release",
+    "remedy": "Security auditing must never be model-optional. Convert to a pre-deployment hook or CI gate. Skills with security implications should use disable-model-invocation: true at minimum.",
+    "remedy_type": "use_hook",
+    "verified": true
+  }
+]

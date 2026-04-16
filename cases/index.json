@@ -1,76 +1,41 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "updated": "2026-04-15T00:00:00Z",
-  "case_count": 6,
+  "case_count": 21,
   "cases": [
     {
-      "case_id": "2026-04-15-seed01",
-      "timestamp": "2026-04-15T00:00:00Z",
-      "platform": "claude-ai",
-      "skill_triggered": "xlsx",
-      "failure_type": "wrong_skill_selected",
-      "failure_signature": "User requested a text-format report or summary, but xlsx skill was triggered due to keyword 'table' appearing in the request",
-      "environment": { "model": "claude-sonnet-4-6", "os": "linux" },
-      "user_correction": "User clarified they wanted inline markdown, not a spreadsheet file",
-      "remedy": "xlsx should only trigger when the user explicitly requests a spreadsheet file, Excel, or .xlsx. Mentions of 'table' alone should default to markdown inline tables.",
-      "remedy_type": "switch_skill",
-      "confidence": "high",
-      "verified": true
-    },
-    {
-      "case_id": "2026-04-15-seed02",
-      "timestamp": "2026-04-15T00:00:00Z",
-      "platform": "claude-ai",
-      "skill_triggered": "pdf",
-      "failure_type": "wrong_skill_selected",
-      "failure_signature": "User asked to read or extract content from a PDF file, but the pdf skill (creation/manipulation) was triggered instead of pdf-reading skill",
-      "environment": { "model": "claude-sonnet-4-6", "os": "linux" },
-      "user_correction": "Task completed after switching to pdf-reading skill manually",
-      "remedy": "Distinguish between pdf (create/merge/fill/encrypt) and pdf-reading (extract/read/inspect). When user says 'read', 'extract', 'what does this PDF say', route to pdf-reading.",
-      "remedy_type": "switch_skill",
-      "confidence": "high",
-      "verified": true
-    },
-    {
-      "case_id": "2026-04-15-seed03",
-      "timestamp": "2026-04-15T00:00:00Z",
-      "platform": "claude-ai",
-      "skill_triggered": "docx",
-      "failure_type": "wrong_skill_selected",
-      "failure_signature": "User requested a brief written summary or explanation, but docx skill was triggered, producing a full Word document when inline text would have sufficed",
-      "environment": { "model": "claude-sonnet-4-6", "os": "linux" },
-      "user_correction": "User asked for the response directly in chat instead of a file",
-      "remedy": "docx should only trigger when user explicitly asks for a Word document, .docx file, or a formal deliverable. Brief summaries, explanations, and conversational content should remain inline.",
-      "remedy_type": "switch_skill",
-      "confidence": "high",
-      "verified": true
-    },
-    {
-      "case_id": "2026-04-15-seed04",
+      "case_id": "2026-04-15-new15",
       "timestamp": "2026-04-15T00:00:00Z",
       "platform": "claude-code",
-      "skill_triggered": "frontend-design",
-      "failure_type": "skill_not_triggered",
-      "failure_signature": "User asked to build a web component but did not use explicit UI/design keywords, so the frontend-design skill was not auto-loaded",
-      "environment": { "model": "claude-sonnet-4-6", "os": "macos" },
-      "user_correction": "User manually invoked /frontend-design",
-      "remedy": "frontend-design description could be broadened to trigger on 'build a component', 'create a page', 'make a form', not just explicit design/styling keywords.",
-      "remedy_type": "update_description",
-      "confidence": "medium",
+      "skill_triggered": "git-workflow",
+      "failure_type": "wrong_skill_selected",
+      "failure_signature": "User asked to review code changes but git-workflow skill was triggered for code review instead of dedicated review skill",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User manually invoked review skill instead",
+      "remedy": "git-workflow should handle branching, merging, committing, and PR creation. Code review should route to dedicated review skill. Update descriptions to separate these concerns.",
+      "remedy_type": "switch_skill",
+      "confidence": "high",
       "verified": true
     },
     {
-      "case_id": "2026-04-15-seed05",
+      "case_id": "2026-04-15-new14",
       "timestamp": "2026-04-15T00:00:00Z",
-      "platform": "openclaw",
-      "skill_triggered": "capability-evolver",
-      "failure_type": "environment_issue",
-      "failure_signature": "Evolver skill attempted to read session logs from a different agent workspace, causing cross-agent log contamination in multi-agent setup",
-      "environment": { "model": "claude-sonnet-4-6", "os": "linux", "context_note": "multi-agent workspace configuration" },
-      "user_correction": "Restricted evolver to single-shot mode with strict workspace isolation",
-      "remedy": "Always isolate cwd strictly when running evolver. Use single-shot mode (not --loop) and set EVOLVE_STRATEGY=harden in multi-agent environments.",
-      "remedy_type": "change_skill_params",
-      "confidence": "high",
+      "platform": "claude-ai",
+      "skill_triggered": "none",
+      "failure_type": "skill_not_triggered",
+      "failure_signature": "User asked to summarize a long conversation into structured notes but no summarization skill was loaded or triggered",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux",
+        "context_note": "80+ turn conversation with multiple topics discussed"
+      },
+      "user_correction": "User manually summarized key points themselves",
+      "remedy": "A summarization/notes skill should trigger on keywords like 'summarize', 'key takeaways', 'action items', 'meeting notes'. Consider adding this skill.",
+      "remedy_type": "update_description",
+      "confidence": "medium",
       "verified": true
     },
     {
@@ -80,11 +45,327 @@
       "skill_triggered": "deploy",
       "failure_type": "should_use_hook",
       "failure_signature": "Deployment skill was auto-triggered by model when code appeared ready, but deployment should only happen with explicit user consent",
-      "environment": { "model": "claude-sonnet-4-6", "os": "macos" },
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
       "user_correction": "Added disable-model-invocation: true to deploy skill frontmatter",
       "remedy": "Any skill with side effects (deploy, send message, publish, commit) should have disable-model-invocation: true. Consider converting to a hook if it must run at a specific lifecycle point.",
       "remedy_type": "restrict_auto_trigger",
       "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new12",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "codex",
+      "skill_triggered": "docx",
+      "failure_type": "environment_issue",
+      "failure_signature": "docx skill failed in sandboxed environment because python-docx package was not installed and pip install was blocked",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux",
+        "context_note": "sandboxed code execution environment"
+      },
+      "user_correction": "User ran skill in local environment where packages were pre-installed",
+      "remedy": "Skill should detect required package availability upfront and suggest alternative execution environments. Consider bundling pure-Python fallback.",
+      "remedy_type": "not_skill_issue",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new13",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "markdown",
+      "failure_type": "skill_conflict",
+      "failure_signature": "Both markdown and docx skills competed when user asked to 'write a report' — ambiguous whether inline text or file deliverable was expected",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User clarified they wanted a .docx file, not inline markdown",
+      "remedy": "markdown skill should explicitly exclude tasks requesting formal document files. docx should claim 'report', 'document', 'deliverable' keywords more aggressively.",
+      "remedy_type": "update_description",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new09",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "capability-evolver",
+      "failure_type": "output_quality",
+      "failure_signature": "Evolver skill generated overly complex prompt instructions after multiple evolution cycles, causing agent behavior to become unpredictable",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux",
+        "context_note": "evolution loop ran for 15+ iterations"
+      },
+      "user_correction": "User reset to original skill and applied a single targeted evolution step",
+      "remedy": "Cap evolution iterations (max 5-7). After each iteration, run a validation check: does the evolved skill still produce stable output? Stop if regression detected.",
+      "remedy_type": "change_skill_params",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new03",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "tavily",
+      "failure_type": "wrong_skill_selected",
+      "failure_signature": "User asked to search for local project files, but tavily web search skill was triggered instead of using local file search or grep",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User clarified they wanted to search within the project codebase, not the web",
+      "remedy": "tavily should only trigger when user explicitly mentions web search, online research, or finding information on the internet. Local file/code search should route to grep or file search tools.",
+      "remedy_type": "switch_skill",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new04",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-ai",
+      "skill_triggered": "tavily",
+      "failure_type": "tool_error",
+      "failure_signature": "Web search API returned rate limit exceeded error after multiple consecutive queries in a single session",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux"
+      },
+      "user_correction": "User waited a few minutes and retried with fewer queries",
+      "remedy": "Implement query batching and caching within the skill. Warn user when approaching rate limits and suggest consolidating searches.",
+      "remedy_type": "change_skill_params",
+      "confidence": "medium",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new16",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "openclaw",
+      "skill_triggered": "tavily",
+      "failure_type": "description_mismatch",
+      "failure_signature": "tavily skill description mentioned 'web search' but did not indicate it also supports extracting page content, causing user to load separate scraping skill unnecessarily",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux"
+      },
+      "user_correction": "User discovered tavily had content extraction after loading both skills",
+      "remedy": "tavily description should list all capabilities: search, extract, summarize pages. Avoid forcing users to load redundant scraping skills.",
+      "remedy_type": "update_description",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new10",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-ai",
+      "skill_triggered": "xlsx",
+      "failure_type": "tool_error",
+      "failure_signature": "xlsx skill threw error when trying to write a spreadsheet with cells containing mixed unicode characters and emoji",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux"
+      },
+      "user_correction": "User simplified data to ASCII-only and retried",
+      "remedy": "xlsx skill should handle unicode normalization before writing cells. Test with diverse character sets including emoji, CJK, and RTL scripts.",
+      "remedy_type": "change_skill_params",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new06",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "test-driven-development",
+      "failure_type": "should_use_hook",
+      "failure_signature": "TDD skill was optionally triggered but user wanted tests to run automatically before every commit, not just when explicitly asked",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User set up a pre-commit hook to run tests instead of relying on skill",
+      "remedy": "Test execution that must happen deterministically (before commits, on file save) should be implemented as a hook, not an optional skill.",
+      "remedy_type": "use_hook",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new07",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "test-driven-development",
+      "failure_type": "output_quality",
+      "failure_signature": "TDD skill generated tests but they lacked edge case coverage and assertions were incomplete — tests passed but did not verify behavior",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User manually added additional test cases and assertions",
+      "remedy": "TDD skill should enforce a checklist: test happy path, edge cases, error conditions, and boundary values. Include assertion templates for common patterns.",
+      "remedy_type": "change_skill_params",
+      "confidence": "medium",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new11",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "pdf",
+      "failure_type": "skill_not_triggered",
+      "failure_signature": "User asked to fill out a PDF form but skill was not triggered because request used 'fill in' instead of 'populate' or 'create'",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User manually invoked /pdf skill",
+      "remedy": "pdf skill description should include 'fill in form', 'complete PDF', 'add data to PDF' as trigger phrases alongside existing 'populate' keywords.",
+      "remedy_type": "update_description",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new17",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "security-audit",
+      "failure_type": "should_use_hook",
+      "failure_signature": "security-audit skill was model-optional and skipped during urgent deployments, but security checks should be mandatory before any release",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User added security scan as mandatory CI step instead of skill",
+      "remedy": "Security auditing must never be model-optional. Convert to a pre-deployment hook or CI gate. Skills with security implications should use disable-model-invocation: true at minimum.",
+      "remedy_type": "use_hook",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new01",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "browser-cdp",
+      "failure_type": "tool_error",
+      "failure_signature": "Browser CDP connection failed when trying to attach to Chrome instance — browser not launched with remote-debugging-port flag",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos",
+        "context_note": "headless browser automation"
+      },
+      "user_correction": "User launched Chrome manually with --remote-debugging-port=9222 before invoking skill",
+      "remedy": "browser-cdp should check if a debuggable browser instance exists before connecting. If not found, offer to launch one automatically with correct flags.",
+      "remedy_type": "change_skill_params",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new02",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "browser-cdp",
+      "failure_type": "environment_issue",
+      "failure_signature": "CDP skill failed to connect because Chrome sandbox environment lacked required dependencies (libx11, libxcomposite) for headless mode",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux",
+        "context_note": "CI/CD runner environment"
+      },
+      "user_correction": "Installed missing system packages via apt before running skill",
+      "remedy": "Skill should detect missing browser dependencies and provide installation instructions, or gracefully degrade to a simpler scraping method.",
+      "remedy_type": "not_skill_issue",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new18",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-ai",
+      "skill_triggered": "browser-cdp",
+      "failure_type": "context_overflow",
+      "failure_signature": "CDP skill instructions lost during multi-page scraping session — agent forgot pagination handling rules and started re-scraping same pages",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux",
+        "context_note": "scraping 50+ pages in single session"
+      },
+      "user_correction": "User broke task into smaller batches of 10 pages each",
+      "remedy": "Web scraping tasks should be chunked into sub-sessions. Skill should maintain a state file (JSON) tracking progress rather than relying on conversation context.",
+      "remedy_type": "change_skill_params",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new05",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "openclaw",
+      "skill_triggered": "gog-workspace",
+      "failure_type": "skill_conflict",
+      "failure_signature": "Both gog-workspace and generic file-management skills triggered for a task involving organizing project files within a workspace directory",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "linux",
+        "context_note": "multiple workspace skills loaded"
+      },
+      "user_correction": "User manually selected gog-workspace to handle the task",
+      "remedy": "gog-workspace description should explicitly claim file organization within workspace directories and set higher priority than generic file skills.",
+      "remedy_type": "update_description",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new20",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "cursor",
+      "skill_triggered": "data-visualization",
+      "failure_type": "wrong_skill_selected",
+      "failure_signature": "User asked for a simple inline data table but data-visualization skill was triggered, generating a full chart when tabular output sufficed",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User clarified they wanted a markdown table, not a visualization",
+      "remedy": "data-visualization should only trigger when user explicitly asks for charts, graphs, plots, or visual analysis. Simple data display should use markdown tables.",
+      "remedy_type": "switch_skill",
+      "confidence": "high",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new08",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "cursor",
+      "skill_triggered": "frontend-design",
+      "failure_type": "context_overflow",
+      "failure_signature": "Frontend skill instructions degraded in long coding session — agent forgot to apply responsive design and accessibility requirements mid-project",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos",
+        "context_note": "40+ turn conversation, multiple components being built"
+      },
+      "user_correction": "User re-invoked the skill to refresh requirements",
+      "remedy": "Frontend skill should be invoked in focused sub-sessions per component rather than one long session. Keep SKILL.md concise with a checklist of non-negotiable requirements.",
+      "remedy_type": "change_skill_params",
+      "confidence": "medium",
+      "verified": true
+    },
+    {
+      "case_id": "2026-04-15-new19",
+      "timestamp": "2026-04-15T00:00:00Z",
+      "platform": "claude-code",
+      "skill_triggered": "api-design",
+      "failure_type": "output_quality",
+      "failure_signature": "api-design skill generated REST endpoints but omitted error response schemas, pagination conventions, and versioning strategy",
+      "environment": {
+        "model": "claude-sonnet-4-6",
+        "os": "macos"
+      },
+      "user_correction": "User manually added missing API design standards",
+      "remedy": "api-design skill should include a mandatory output template: endpoints, request/response schemas, error format, pagination, auth, versioning. Checklist-driven generation.",
+      "remedy_type": "change_skill_params",
+      "confidence": "medium",
       "verified": true
     }
   ]

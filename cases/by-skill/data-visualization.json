@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new20",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "cursor",
+    "skill_triggered": "data-visualization",
+    "failure_type": "wrong_skill_selected",
+    "failure_signature": "User asked for a simple inline data table but data-visualization skill was triggered, generating a full chart when tabular output sufficed",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User clarified they wanted a markdown table, not a visualization",
+    "remedy": "data-visualization should only trigger when user explicitly asks for charts, graphs, plots, or visual analysis. Simple data display should use markdown tables.",
+    "remedy_type": "switch_skill",
+    "confidence": "high",
+    "verified": true
+  }
+]

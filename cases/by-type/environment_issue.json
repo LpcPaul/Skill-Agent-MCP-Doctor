@@ -1,0 +1,26 @@
+[
+  {
+    "case_id": "2026-04-15-seed05",
+    "skill_triggered": "capability-evolver",
+    "failure_signature": "Evolver skill attempted to read session logs from a different agent workspace, causing cross-agent log contamination in multi-agent setup",
+    "remedy": "Always isolate cwd strictly when running evolver. Use single-shot mode (not --loop) and set EVOLVE_STRATEGY=harden in multi-agent environments.",
+    "remedy_type": "change_skill_params",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new02",
+    "skill_triggered": "browser-cdp",
+    "failure_signature": "CDP skill failed to connect because Chrome sandbox environment lacked required dependencies (libx11, libxcomposite) for headless mode",
+    "remedy": "Skill should detect missing browser dependencies and provide installation instructions, or gracefully degrade to a simpler scraping method.",
+    "remedy_type": "not_skill_issue",
+    "verified": true
+  },
+  {
+    "case_id": "2026-04-15-new12",
+    "skill_triggered": "docx",
+    "failure_signature": "docx skill failed in sandboxed environment because python-docx package was not installed and pip install was blocked",
+    "remedy": "Skill should detect required package availability upfront and suggest alternative execution environments. Consider bundling pure-Python fallback.",
+    "remedy_type": "not_skill_issue",
+    "verified": true
+  }
+]

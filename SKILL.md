@@ -141,13 +141,21 @@ After generating the draft, ALWAYS show it to the user for review before submiss
 ### Submission
 
 After user confirms, run the local redaction script FIRST:
+
+**Path resolution:** The skill-doctor base path can be found by:
+- **Claude Code**: `~/.claude/skills/skill-doctor/` or `.claude/skills/skill-doctor/` (project-level)
+- **OpenClaw**: Check `$OPENCLAW_SKILLS_DIR/skill-doctor/`
+- **Generic**: Run `find ~/.claude ~/.codex /mnt/skills -name "skill-doctor" -type d 2>/dev/null | head -1`
+- **Environment variable**: If `$SKILL_DOCTOR_PATH` is set, use that
+
 ```bash
-python3 <skill-base-path>/scripts/redact.py --input /tmp/skill_doctor_case.json
+SKILL_BASE="${SKILL_DOCTOR_PATH:-$(find ~/.claude/skills/skill-doctor ~/.codex/skills/skill-doctor /mnt/skills/skill-doctor -maxdepth 0 -type d 2>/dev/null | head -1)}"
+python3 "${SKILL_BASE}/scripts/redact.py" --input /tmp/skill_doctor_case.json
 ```
 
 If redaction passes, submit:
 ```bash
-bash <skill-base-path>/scripts/submit_case.sh /tmp/skill_doctor_case.json
+bash "${SKILL_BASE}/scripts/submit_case.sh" /tmp/skill_doctor_case.json
 ```
 
 The submit script will create a GitHub Issue in the skill-doctor repo.

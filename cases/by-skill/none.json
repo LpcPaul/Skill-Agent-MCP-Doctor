@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "2026-04-15-new14",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-ai",
+    "skill_triggered": "none",
+    "failure_type": "skill_not_triggered",
+    "failure_signature": "User asked to summarize a long conversation into structured notes but no summarization skill was loaded or triggered",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "linux",
+      "context_note": "80+ turn conversation with multiple topics discussed"
+    },
+    "user_correction": "User manually summarized key points themselves",
+    "remedy": "A summarization/notes skill should trigger on keywords like 'summarize', 'key takeaways', 'action items', 'meeting notes'. Consider adding this skill.",
+    "remedy_type": "update_description",
+    "confidence": "medium",
+    "verified": true
+  }
+]

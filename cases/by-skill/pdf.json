@@ -1,0 +1,19 @@
+[
+  {
+    "case_id": "2026-04-15-new11",
+    "timestamp": "2026-04-15T00:00:00Z",
+    "platform": "claude-code",
+    "skill_triggered": "pdf",
+    "failure_type": "skill_not_triggered",
+    "failure_signature": "User asked to fill out a PDF form but skill was not triggered because request used 'fill in' instead of 'populate' or 'create'",
+    "environment": {
+      "model": "claude-sonnet-4-6",
+      "os": "macos"
+    },
+    "user_correction": "User manually invoked /pdf skill",
+    "remedy": "pdf skill description should include 'fill in form', 'complete PDF', 'add data to PDF' as trigger phrases alongside existing 'populate' keywords.",
+    "remedy_type": "update_description",
+    "confidence": "high",
+    "verified": true
+  }
+]
