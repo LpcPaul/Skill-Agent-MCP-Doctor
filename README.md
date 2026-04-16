@@ -1,6 +1,7 @@
 # 🩺 Skill Doctor
 
-**AI Agent 的技能故障诊断系统**
+> 当 AI 不知道怎么办时，它需要一个能问的地方。
+> *When your AI doesn't know what to do, it needs somewhere to ask.*
 
 ![Skill Doctor Architecture](https://github.com/LpcPaul/skill-doctor/raw/main/hero_preview.png)
 
