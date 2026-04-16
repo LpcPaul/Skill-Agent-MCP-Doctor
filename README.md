@@ -47,22 +47,17 @@ This is what AgentRX does: turns a stuck state into a structured next-step decis
 
 **AgentRX is installed by humans, but operated by AI.**
 
-Once installed, the human is not the primary user. The primary user is the AI agent itself:
-- it **diagnoses** stuck states
-- it **searches** the case library
-- it **chooses** a better route
-- it **contributes** new cases back
-
-You don't run AgentRX. Your AI does.
+Once installed, the human is not the primary user. The primary runtime user is the AI agent itself.
+The default contributor is also AI.
 
 ### Human role vs AI role
 
 | | What they do |
 |---|---|
-| **Human** | Install the skill. Expose the repository / index / rules. Optionally review schema or approve maintenance changes. |
-| **AI** | Detect stuck state. Structure evidence. Derive inference. Retrieve similar cases. Choose next action. Optionally contribute a new case. |
+| **Human** | Install the skill. Host the repository. Optionally review schema or approve maintenance changes. |
+| **AI** | Detect stuck state. Collect evidence. Derive inference. Retrieve similar cases. Choose a route. Optionally contribute a new case. |
 
-**The human is the installer and host. The AI is the default operator.**
+**The human is the installer and host. The AI is the default operator and contributor.**
 
 ### The AI self-evolution loop
 
@@ -86,30 +81,7 @@ Each case contributed by an AI agent makes the next agent smarter. The library g
 AgentRX diagnoses AI tool-chain failures and prescribes the next best action.
 It covers **skills, MCP servers, plugins, built-in tools, agents, workflows, and hooks**.
 
-It is a **stuck-state navigation system** — the first responder when any part of your AI agent's tool path breaks down.
-
-## Why this project changed
-
-The old project (Skill Doctor) was designed around the question:
-
-- "Which tool failed?"
-- "Which failure type does this belong to?"
-
-That worked only when the agent already knew **which tool** was involved.
-
-But real failures usually begin from a messier place:
-
-- "I'm trying to browse a page and the content is incomplete."
-- "I generated a document, but the output is wrong."
-- "I can do this task with a skill, an MCP, a plugin, or a built-in tool — which one should I switch to?"
-- "I am not sure whether this is a routing problem, a config problem, an environment problem, or simply the wrong tool for the job."
-
-So the project has been redesigned around a different principle:
-
-> **Start from the task, then locate the stage, then classify the problem family, then choose the next action.**
-
-This repository is no longer only about "skill governance."
-It is about **AI tool-path diagnosis and next-step recommendation**.
+It is a **stuck-state navigation system** — the first responder when any part of an AI agent's tool path breaks down.
 
 ## What it covers
 
@@ -127,14 +99,46 @@ This project covers failures and decision paths involving:
 This is **not** a universal benchmark site for all AI tools.
 It only enters the picture when an AI tool-path did **not** meet expectations and the agent needs help deciding what to do next.
 
-## Core positioning
+## The v2.1 model
 
-AgentRX does four things:
+The system is built around a two-layer case structure:
 
-1. **Intake** — force the agent to describe its own blockage in a structured way.
-2. **Navigate** — route the problem through a task-first knowledge architecture.
-3. **Recommend** — propose the most suitable next action, not just a label.
-4. **Evolve** — turn recovery paths into reusable cases that make future AI agents smarter.
+```
+evidence (immutable facts)        inference (AI-generated diagnosis)
+├── task                          ├── journey_stage
+├── desired_outcome               ├── problem_family
+├── attempted_path                ├── why_current_path_failed  ← core field
+└── symptom                       └── best_candidate_route_id  ← core field
+                                    └── confidence
+```
+
+**Evidence** is what the agent observes directly — surface symptoms, attempted tool paths, desired outcomes. These are immutable facts.
+
+**Inference** is the agent's interpretation — where the blockage is, what problem family it fits, why the current path won't work, and which route to take next. These are re-computable; a different agent reading the same evidence might produce different inference.
+
+**Route ids are action paths, not tool brands.** `switch_to_alternative_tool_path` is stable; `playwright-mcp` is not. Tools come and go; action patterns persist.
+
+## Why this project changed
+
+The old project (Skill Doctor) was designed around the question:
+
+- "Which tool failed?"
+- "Which failure type does this belong to?"
+
+That worked only when the agent already knew **which tool** was involved.
+
+But real failures usually begin from a messier place:
+
+- "I'm trying to browse a page and the content is incomplete."
+- "I generated a document, but the output is wrong."
+- "I can do this task with a skill, an MCP, a plugin, or a built-in tool — which one should I switch to?"
+
+So the project has been redesigned around a different principle:
+
+> **Start from evidence. Derive inference. Choose a route.**
+
+This repository is no longer only about "skill governance."
+It is about **AI tool-path diagnosis and next-step recommendation**.
 
 ## Why this is not a generic human-facing tool directory
 
@@ -172,32 +176,14 @@ git clone https://github.com/LpcPaul/AgentRX.git ~/.codex/skills/agentrx
 
 After you clone AgentRX into your skill directory, nothing changes on your end.
 Your AI agent gains a new capability it can activate when stuck.
-Over time, as cases are contributed, the library grows and retrieval quality improves.
 
-The case library starts small and grows through accumulated AI experience:
+You don't manually operate this repository. The AI agent:
+- diagnoses its own stuck states
+- searches the case library for similar patterns
+- switches to a better route based on past cases
+- optionally contributes new cases back
 
-| What you install today | What you get over time |
-|---|---|
-| 10 golden cases across 10 route types | Growing collection of real stuck-state diagnoses |
-| Structured schema + route registry | Richer context for AI-to-AI knowledge transfer |
-| Self-evolution loop ready | Future AI agents benefit from past recoveries |
-
----
-
-## What changed from the old version
-
-### Old model (v1 — Skill Doctor)
-- centered on `skill_triggered`
-- organized cases by `by-skill/` and `by-type/`
-- retrieved mostly by `skill_triggered + failure_type`
-- treated many failures as "skill failures"
-
-### New model (v2.1 — AgentRX)
-- centered on `task + journey_stage + problem_family`
-- **evidence / inference split** — facts vs. interpretation
-- **standardized route ids** — action paths, not tool brands
-- recommends the **next action** rather than only classifying the cause
-- cases are **AI-contributed**, AI-consumed
+Over time, as cases are contributed by AI agents, the library grows and retrieval quality improves.
 
 ---
 
@@ -208,7 +194,6 @@ The case library starts small and grows through accumulated AI experience:
 | [SKILL.md](SKILL.md) | The runtime prompt that the AI agent reads when activated |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design — why AI-only, why evidence/inference, why route ids |
 | [docs/INTAKE_CARD.md](docs/INTAKE_CARD.md) | The structured format AI uses to translate stuck states into queries |
-| [docs/AI_SELF_EVOLUTION.md](docs/AI_SELF_EVOLUTION.md) | The self-evolution loop — how the library grows over time |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How cases enter the system — default contributor is AI |
 | [cases/README.md](cases/README.md) | Case library structure and indexing |
 

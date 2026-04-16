@@ -35,9 +35,7 @@ jobs:
         run: pip install pyyaml
 
       - name: Run CI self-test
-        id: self_test
-        run: |
-          python3 scripts/ci_self_test.py
+        run: python3 scripts/ci_self_test.py
 
   validate-issue-case:
     if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'case-report')
@@ -57,143 +55,35 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      # Step A: Try to extract full JSON from issue body first (optional field)
-      - name: Extract JSON from issue body
-        id: extract_json
+      # Step 1: Write issue body to file for parsing
+      - name: Write issue body to file
         uses: actions/github-script@v7
         with:
           script: |
-            const body = context.payload.issue.body || '';
-            const jsonMatch = body.match(/```json\s*\n([\s\S]*?)\n```/);
-            if (jsonMatch) {
-              const fs = require('fs');
-              fs.writeFileSync('/tmp/case_from_issue.json', jsonMatch[1]);
-              core.setOutput('has_json', 'true');
-            } else {
-              core.setOutput('has_json', 'false');
-            }
-
-      # Step B: If no JSON block, assemble v2.1 case JSON from structured form fields
-      - name: Assemble case JSON from form fields
-        id: assemble
-        if: steps.extract_json.outputs.has_json != 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.issue.body || '';
             const fs = require('fs');
+            fs.writeFileSync('/tmp/issue_body.txt', context.payload.issue.body || '');
 
-            function getField(label) {
-              const regex = new RegExp(`^### ${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n([\\s\\S]*?)(?=\\n### |$)`, 'm');
-              const match = body.match(regex);
-              if (match) {
-                let val = match[1].trim();
-                // Remove "_No response_" placeholder
-                if (val === '_No response_') return '';
-                return val;
-              }
-              return '';
-            }
+      # Step 2: Try to extract full JSON block first (backward compat)
+      - name: Check for embedded JSON block
+        id: check_json
+        run: |
+          if grep -q '```json' /tmp/issue_body.txt; then
+            sed -n '/```json/,/```/p' /tmp/issue_body.txt | grep -v '```' > /tmp/case_from_issue.json
+            echo "has_json=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_json=false" >> $GITHUB_OUTPUT
+          fi
 
-            function getDropdown(label) {
-              const val = getField(label);
-              // Clean up markdown list formatting
-              return val.replace(/^-\s*/, '').trim();
-            }
+      # Step 3: If no JSON block, assemble from form fields
+      - name: Assemble case JSON from form fields
+        if: steps.check_json.outputs.has_json != 'true'
+        id: assemble
+        run: |
+          python3 scripts/parse_issue_form.py --body-file /tmp/issue_body.txt --output /tmp/case_from_issue.json
+          echo "assembled=true" >> $GITHUB_OUTPUT
 
-            function getMultiLine(label) {
-              const val = getField(label);
-              // Split by lines, remove empty lines and "- " prefix
-              return val.split('\n')
-                .map(l => l.replace(/^-\s*/, '').trim())
-                .filter(l => l.length > 0);
-            }
-
-            const evidenceTask = getField('Task') || '';
-            const evidenceDesiredOutcome = getField('Desired outcome') || '';
-            const evidenceAttemptedTool = getField('Attempted tool') || '';
-            const evidenceToolType = getDropdown('Tool type') || 'unknown';
-            const evidenceSymptom = getField('Symptom') || '';
-            const evidenceReproductionSteps = getMultiLine('Reproduction steps');
-            const evidenceContext = getField('Context (optional)') || '';
-            const evidenceEnvironmentNotes = getField('Environment notes (optional)') || '';
-            const evidenceFailedStep = getField('Failed step (optional)') || '';
-            const evidenceArtifactsUsed = getMultiLine('Artifacts used (optional)');
-
-            const inferenceJourneyStage = getDropdown('Journey stage') || 'unknown';
-            const inferenceProblemFamily = getDropdown('Problem family') || 'unknown';
-            const inferenceWhyCurrentPathFailed = getField('Why current path failed') || '';
-            const inferenceBestCandidateRouteId = getDropdown('Best candidate route id') || '';
-            const inferenceBestCandidateRouteDetail = getField('Route detail (optional)') || '';
-            const inferencePrerequisitesForSwitch = getMultiLine('Prerequisites for switch (optional)');
-            const inferenceConfidence = getDropdown('Confidence') || 'medium';
-
-            const resolutionOutcome = getDropdown('Outcome') || 'unknown';
-            const resolutionFollowUpNotes = getField('Follow-up notes (optional)') || '';
-
-            const metadataSource = getDropdown('Source') || 'user-reported';
-            const metadataTags = (getField('Tags') || '').split(',').map(t => t.trim()).filter(t => t.length > 0);
-
-            // Parse environment notes for platform and constraints
-            const environment = { platform: 'other' };
-            if (evidenceEnvironmentNotes) {
-              const platformMatch = evidenceEnvironmentNotes.match(/[Pp]latform:\s*(\S+)/);
-              if (platformMatch) environment.platform = platformMatch[1];
-              if (evidenceEnvironmentNotes.includes('dynamic render')) environment.requires_dynamic_render = true;
-              if (evidenceEnvironmentNotes.includes('network')) environment.requires_network = true;
-              if (evidenceEnvironmentNotes.includes('login')) environment.requires_login = true;
-              if (evidenceEnvironmentNotes.includes('filesystem')) environment.requires_local_filesystem = true;
-              if (evidenceEnvironmentNotes.includes('deterministic')) environment.requires_deterministic_execution = true;
-              environment.notes = evidenceEnvironmentNotes;
-            }
-
-            const caseData = {
-              schema_version: "2.1",
-              id: `${new Date().toISOString().slice(0, 10)}-${evidenceTask.replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`,
-              title: `${evidenceTask} ${inferenceJourneyStage} ${inferenceProblemFamily}`,
-              summary: inferenceWhyCurrentPathFailed,
-              created_at: new Date().toISOString(),
-              tags: metadataTags,
-              evidence: {
-                task: evidenceTask,
-                desired_outcome: evidenceDesiredOutcome,
-                attempted_path: {
-                  tool: evidenceAttemptedTool,
-                  tool_type: evidenceToolType
-                },
-                symptom: evidenceSymptom,
-                reproduction_steps: evidenceReproductionSteps.length > 0 ? evidenceReproductionSteps : undefined
-              },
-              inference: {
-                journey_stage: inferenceJourneyStage,
-                problem_family: inferenceProblemFamily,
-                why_current_path_failed: inferenceWhyCurrentPathFailed,
-                best_candidate_route_id: inferenceBestCandidateRouteId,
-                best_candidate_route_detail: inferenceBestCandidateRouteDetail || undefined,
-                prerequisites_for_switch: inferencePrerequisitesForSwitch.length > 0 ? inferencePrerequisitesForSwitch : undefined,
-                confidence: inferenceConfidence
-              },
-              resolution: {
-                outcome: resolutionOutcome,
-                follow_up_notes: resolutionFollowUpNotes || undefined
-              },
-              source: metadataSource,
-              verified: false,
-              related_cases: []
-            };
-
-            // Add optional fields only if they have content
-            if (evidenceContext) caseData.evidence.context = evidenceContext;
-            if (Object.keys(environment).length > 1) caseData.evidence.environment = environment;
-            if (evidenceFailedStep) caseData.evidence.failed_step = evidenceFailedStep;
-            if (evidenceArtifactsUsed.length > 0) caseData.evidence.artifacts_used = evidenceArtifactsUsed;
-
-            fs.writeFileSync('/tmp/case_from_issue.json', JSON.stringify(caseData, null, 2));
-            core.setOutput('has_json', 'true');
-            core.setOutput('assembled', 'true');
-
+      # Step 4: Validate the case (works for both paths)
       - name: Validate case
-        if: steps.extract_json.outputs.has_json == 'true' || steps.assemble.outputs.has_json == 'true'
         id: validate
         run: |
           RESULT=$(python3 scripts/validate_case.py --input /tmp/case_from_issue.json 2>&1) || EXIT_CODE=$?
@@ -202,8 +92,8 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
           echo "exit_code=${EXIT_CODE:-0}" >> $GITHUB_OUTPUT
 
+      # Step 5: Post comment with results
       - name: Post validation comment
-        if: steps.extract_json.outputs.has_json == 'true' || steps.assemble.outputs.has_json == 'true'
         uses: actions/github-script@v7
         with:
           script: |

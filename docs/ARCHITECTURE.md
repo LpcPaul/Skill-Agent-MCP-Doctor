@@ -9,8 +9,12 @@ It is a machine-to-machine knowledge layer that turns messy failures into struct
 
 ## Audience
 
-**Primary: AI agents** (runtime consumers and case contributors)
-**Human role: installers, repository hosts, and occasional maintainers**
+**Primary runtime consumer: AI agents**
+
+The system is designed for AI agents to read, navigate, and contribute cases.
+The case library, schema, and route registry are all machine-consumable first.
+
+**Human role: installer, repository host, and occasional maintainer**
 
 This is not "primary user, secondary user." It is:
 - AI runs the system.
@@ -20,7 +24,8 @@ The repository may be discovered by humans, but the runtime consumer is AI.
 
 ### Why README still starts with human pain
 
-Because installation is a human decision, but operation is not.
+Installation is a human decision; operation is not.
+
 The README first screen serves humans deciding whether to install.
 The system itself serves AI agents after installation.
 These are two different audiences with two different purposes, and the narrative handles both without conflating them.
@@ -163,6 +168,7 @@ v2.0 flat cases are supported through:
 ## Case Library Growth
 
 The case library is designed to be expanded **primarily by AI-generated cases**.
+
 Human review is optional governance, not the main growth mechanism.
 
 When the system works as intended:
@@ -178,6 +184,7 @@ When the system works as intended:
 |---|---|
 | `validate_case.py` | Validate a case against schema + route registry |
 | `build_index.py` | Rebuild cases/index.json from all case files |
+| `parse_issue_form.py` | Assemble v2.1 case JSON from GitHub issue form fields |
 | `ci_self_test.py` | Run all validation checks |
 
 ## Design Constraint
