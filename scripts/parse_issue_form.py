@@ -78,7 +78,7 @@ def assemble_case(body: str) -> dict:
     # ── Evidence ──
     task = parse_markdown_field(body, 'Task')
     desired_outcome = parse_markdown_field(body, 'Desired outcome')
-    attempted_tool = parse_markdown_field(body, 'Attempted tool')
+    attempted_path_label = parse_markdown_field(body, 'Attempted path') or parse_markdown_field(body, 'Attempted tool')
     tool_type = parse_dropdown(body, 'Tool type') or 'unknown'
     symptom = parse_markdown_field(body, 'Symptom')
     reproduction_steps = parse_multiline(body, 'Reproduction steps')
@@ -113,7 +113,7 @@ def assemble_case(body: str) -> dict:
         'task': task,
         'desired_outcome': desired_outcome,
         'attempted_path': {
-            'tool': attempted_tool,
+            'tool': attempted_path_label,
             'tool_type': tool_type,
         },
         'symptom': symptom,

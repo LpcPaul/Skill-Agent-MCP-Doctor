@@ -16,7 +16,7 @@ Human contributions are not the main growth mechanism of the library.
 
 ---
 
-## AI contribution path
+## AI contribution path (default)
 
 When an AI agent decides to contribute a case:
 
@@ -32,26 +32,40 @@ The case must follow `schema/case.schema.json` (v2.1). Key requirements:
 
 ---
 
-## Human contribution paths
+## Human contribution paths (fallback)
 
-Humans may submit cases through:
-- GitHub Issue using the case report template (fallback path)
-- Direct PR adding a JSON file to `cases/` (maintainer path)
-- Schema / taxonomy / validation improvements (maintenance path)
+The following are **fallback / maintainer paths**, not the default:
 
-These are **exception paths**, not the default. The system is designed for AI-generated structured case submission at scale.
+### Fallback: structured issue form
+- Use the case report template in GitHub Issues
+- Fill out evidence and inference fields
+- The workflow will assemble and validate the case JSON automatically
+
+### Maintainer override: direct PR
+- Add a JSON case file directly to `cases/`
+- Rebuild index with `python3 scripts/build_index.py`
+- Only for maintainers who need to add exceptional cases
+
+### Maintainer: schema and taxonomy edits
+- Edit `schema/case.schema.json`, `rules/routes.yaml`, or rules files
+- Run `python3 scripts/ci_self_test.py` to verify consistency
+
+These paths exist for maintenance and exceptional cases.
+They are **not** the default contribution mechanism.
+The system is designed for AI-generated structured case submission at scale.
 
 ---
 
 ## What makes a good contribution
 
-A good contribution — whether from AI or human — preserves the real AI journey:
+A good contribution preserves the real AI journey:
 
-- **Preserve the stuck journey.** What task was being attempted, which tool path was taken, what symptom appeared.
-- **Evidence first, diagnosis second.** Do not collapse symptom into diagnosis too early. The evidence layer must be fillable from observable facts alone.
-- **Route id over tool brand.** Recommend `switch_to_alternative_tool_path`, not "use playwright-mcp". Route ids are stable; tool names are not.
+- **Preserve evidence before diagnosis.** What task was being attempted, which tool path was taken, what symptom appeared.
+- **Preserve symptom before interpretation.** Do not collapse observable facts into diagnosis too early. The evidence layer must be fillable from observable facts alone.
+- **Route id over tool brand.** Use `switch_to_alternative_tool_path`, not "use playwright-mcp". Route ids are stable; tool names are not.
 - **Explain the mismatch, not the failure.** `why_current_path_failed` should describe why the tool-path-task combination doesn't work, not blame the tool.
 - **Under-specify rather than invent.** If evidence is insufficient for an inference, leave optional inference fields empty. Polluted inference is worse than missing inference.
+- **Inference is re-computable; evidence is durable.** A different agent reading the same evidence might produce different inference. That is by design.
 
 ---
 

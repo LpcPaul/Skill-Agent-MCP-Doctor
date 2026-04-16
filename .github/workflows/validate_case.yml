@@ -63,24 +63,43 @@ jobs:
             const fs = require('fs');
             fs.writeFileSync('/tmp/issue_body.txt', context.payload.issue.body || '');
 
-      # Step 2: Try to extract full JSON block first (backward compat)
-      - name: Check for embedded JSON block
-        id: check_json
+      # Step 2: Check for both raw JSON and form fields
+      - name: Detect validation source
+        id: detect_source
         run: |
+          HAS_JSON=false
+          HAS_FORM=false
+
           if grep -q '```json' /tmp/issue_body.txt; then
-            sed -n '/```json/,/```/p' /tmp/issue_body.txt | grep -v '```' > /tmp/case_from_issue.json
-            echo "has_json=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_json=false" >> $GITHUB_OUTPUT
+            HAS_JSON=true
           fi
 
-      # Step 3: If no JSON block, assemble from form fields
+          # Check if structured form fields exist (Task, Symptom, Why current path failed, etc.)
+          if grep -q '^### Task$' /tmp/issue_body.txt && grep -q '^### Symptom$' /tmp/issue_body.txt; then
+            HAS_FORM=true
+          fi
+
+          echo "has_json=$HAS_JSON" >> $GITHUB_OUTPUT
+          echo "has_form=$HAS_FORM" >> $GITHUB_OUTPUT
+
+          if [ "$HAS_JSON" = "true" ] && [ "$HAS_FORM" = "true" ]; then
+            echo "::warning::Both raw JSON block and structured form fields detected. Using raw JSON for validation."
+          fi
+
+      # Step 3: Extract or assemble case JSON
+      - name: Extract raw JSON block
+        if: steps.detect_source.outputs.has_json == 'true'
+        id: extract_json
+        run: |
+          sed -n '/```json/,/```/p' /tmp/issue_body.txt | grep -v '```' > /tmp/case_from_issue.json
+          echo "validation_source=raw_json_block" >> $GITHUB_OUTPUT
+
       - name: Assemble case JSON from form fields
-        if: steps.check_json.outputs.has_json != 'true'
+        if: steps.detect_source.outputs.has_json != 'true'
         id: assemble
         run: |
           python3 scripts/parse_issue_form.py --body-file /tmp/issue_body.txt --output /tmp/case_from_issue.json
-          echo "assembled=true" >> $GITHUB_OUTPUT
+          echo "validation_source=parsed_issue_form" >> $GITHUB_OUTPUT
 
       # Step 4: Validate the case (works for both paths)
       - name: Validate case
@@ -99,18 +118,37 @@ jobs:
           script: |
             const validateResult = `${{ steps.validate.outputs.result }}`;
             const validateExit = '${{ steps.validate.outputs.exit_code }}';
-            const wasAssembled = '${{ steps.assemble.outputs.assembled }}' === 'true';
+            const validationSource = '${{ steps.extract_json.outputs.validation_source || steps.assemble.outputs.validation_source }}';
+            const hasBothSources = '${{ steps.detect_source.outputs.has_json }}' === 'true' && '${{ steps.detect_source.outputs.has_form }}' === 'true';
 
             let comment = '## AgentRX — Case Validation (v2.1)\n\n';
 
-            if (wasAssembled) {
-              comment += '📋 Case JSON was assembled from form fields.\n\n';
+            // Source info
+            if (hasBothSources) {
+              comment += '⚠️ Both raw JSON and form fields detected. Using raw JSON.\n\n';
+            }
+            if (validationSource === 'raw_json_block') {
+              comment += '📋 Validation source: raw JSON block from issue body.\n\n';
+            } else if (validationSource === 'parsed_issue_form') {
+              comment += '📋 Validation source: assembled from structured form fields.\n\n';
             }
 
+            // Result
             if (validateExit === '0') {
               comment += '✅ Case passed v2.1 schema validation.\n\n';
             } else {
               comment += '❌ Case validation failed:\n\n```\n' + validateResult + '\n```\n\n';
+
+              // Categorize errors
+              if (validateResult.includes('Missing required field')) {
+                comment += '**Error type:** Missing required fields. Check evidence and inference sections.\n\n';
+              } else if (validateResult.includes('route id') || validateResult.includes('best_candidate_route_id')) {
+                comment += '**Error type:** Invalid route id. Must be from rules/routes.yaml.\n\n';
+              } else if (validateResult.includes('schema') || validateResult.includes('not in allowed values')) {
+                comment += '**Error type:** Schema violation. Check field types and enum values.\n\n';
+              } else if (validateResult.includes('parse') || validateResult.includes('JSON')) {
+                comment += '**Error type:** JSON parse error. Ensure valid JSON format.\n\n';
+              }
             }
 
             comment += 'Review checklist:\n';

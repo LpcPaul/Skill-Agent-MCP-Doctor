@@ -38,9 +38,9 @@ body:
       required: true
 
   - type: input
-    id: evidence_attempted_tool
+    id: evidence_attempted_path
     attributes:
-      label: Attempted tool
+      label: Attempted path
       description: "What tool or path was used?"
       placeholder: "e.g. browser-cdp"
     validations:
@@ -251,6 +251,6 @@ body:
   - type: textarea
     id: full_json
     attributes:
-      label: Full case JSON (optional)
-      description: "Paste a complete v2.1 case object if available."
+      label: Full case JSON (optional fallback)
+      description: "Paste a complete v2.1 case object to override form fields. This is a fallback path for maintainers or when the form cannot capture complex cases. If provided, this JSON takes priority over structured fields."
       render: json

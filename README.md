@@ -8,7 +8,7 @@
 
 > You've installed a pile of tools — skills, MCP servers, plugins — but every time something goes wrong, your AI bounces between them forever trying, switching, retrying. Time wasted. Tokens burned.
 
-> You've got three tools that all claim to make slide decks. But which one is better? Which one fits this particular presentation? Every time, both you and your AI are stuck guessing.
+> You've got three tools that all claim to make slide decks. But which one is better? Which one fits this particular presentation? Every time, the AI has to guess, and you shouldn't have to be its fallback decision-maker.
 
 > A tool call fails, and the AI turns around and asks you what to do. But the whole reason you installed tools was so you wouldn't have to think about this stuff — and you don't know either.
 
@@ -27,16 +27,16 @@ AI: [tries browser-cdp skill]
 
 [AgentRX activates]
 
-AgentRX: You hit a `capability_mismatch` at the execute-task stage.
+AgentRX: Route: switch_to_alternative_tool_path
 
-         Two alternatives exist in your current environment:
+         Why: current tool captures static HTML only; page requires
+         JavaScript rendering.
 
-         1. web-access skill  — handles post-render DOM, best for this task
-         2. Playwright MCP    — better if you also need interaction
-                                (clicks, scrolls, form fills)
+         Detail: switch to a browser-capable route. playwright-mcp can
+         render the page and extract the full DOM. web_fetch is a
+         lighter option for static pages.
 
-         Prescription: switch to web-access.
-         Confidence: high.
+         Confidence: high
 ```
 
 This is what AgentRX does: turns a stuck state into a structured next-step decision.
