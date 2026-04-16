@@ -1,0 +1,33 @@
+# Backward-compatible migration file
+#
+# v1 used "failure_type" as the main organizing concept.
+# v2 replaces that with "problem_family" inside a task-first model.
+#
+# Keep this file so older references do not break during migration.
+#
+migration_note:
+  old_primary_key: failure_type
+  new_primary_key: suspected_problem_family
+  new_navigation_order:
+    - task_category
+    - journey_stage
+    - suspected_problem_family
+    - tool_triggered
+    - recommended_next_step
+
+legacy_to_v2:
+  wrong_skill_selected: capability_mismatch
+  skill_conflict: better_alternative_exists
+  skill_not_triggered: task_framing_issue
+  tool_error: invocation
+  environment_issue: environment
+  context_overflow: observability_gap
+  description_mismatch: task_framing_issue
+  should_use_hook: hook_vs_model_boundary
+  output_quality: quality_miss
+  unknown: unknown
+
+see_also:
+  - rules/problem_families.yaml
+  - rules/task_taxonomy.yaml
+  - rules/journey_stages.yaml

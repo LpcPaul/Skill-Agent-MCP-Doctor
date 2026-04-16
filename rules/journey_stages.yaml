@@ -1,0 +1,28 @@
+journey_stages:
+  understand-task:
+    description: "The agent does not yet have a stable problem framing."
+    key_question: "What is the real task and desired output?"
+
+  choose-capability:
+    description: "The agent is deciding which tool family should handle the task."
+    key_question: "What kind of capability is needed here?"
+
+  configure-capability:
+    description: "The chosen tool family is plausible, but setup may be incomplete."
+    key_question: "Is the selected capability properly configured and accessible?"
+
+  execute-task:
+    description: "The tool is being run or invoked."
+    key_question: "Can the current path actually execute and satisfy the constraints?"
+
+  validate-output:
+    description: "The task completed technically, but the agent must judge whether it actually solved the task."
+    key_question: "Is the result good enough for the user’s goal?"
+
+  recover-from-failure:
+    description: "The current path failed and the agent needs a fallback."
+    key_question: "What should be the next recovery move?"
+
+  optimize-tool-path:
+    description: "The current path works, but there may be a stronger alternative."
+    key_question: "Is there a better route for this recurring task?"

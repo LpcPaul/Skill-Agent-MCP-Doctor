@@ -1,0 +1,105 @@
+# Canonical problem families for v2
+#
+# These are no longer called "failure types" in the primary model.
+# A stuck state is first navigated by:
+# task -> journey stage -> problem family -> next action
+#
+problem_families:
+  environment:
+    description: "The task path is blocked by system/runtime limits."
+    signals:
+      - "permission denied"
+      - "missing package or executable"
+      - "network unavailable"
+      - "sandbox restriction"
+      - "works elsewhere but not here"
+    default_next_step: inspect_environment_or_permissions
+
+  configuration:
+    description: "The tool family is plausible, but setup/config is wrong or incomplete."
+    signals:
+      - "MCP/server/plugin is installed but unusable"
+      - "credentials or config missing"
+      - "wrong endpoint / missing permission scope"
+      - "tool exists but agent cannot access it properly"
+    default_next_step: inspect_environment_or_permissions
+
+  invocation:
+    description: "The selected tool can probably do the job, but it was called the wrong way."
+    signals:
+      - "wrong flags, wrong prompt framing, wrong sequence"
+      - "selector/timing/waiting issue"
+      - "tool used without the required intermediate step"
+    default_next_step: adjust_current_tool_invocation
+
+  capability_mismatch:
+    description: "The current tool path is a poor fit for the real task constraints."
+    signals:
+      - "static fetch used for dynamic page"
+      - "file tool used when browser state is required"
+      - "agent chooses a route that cannot satisfy core constraints"
+    default_next_step: switch_tool_within_same_task
+
+  quality_miss:
+    description: "The tool technically ran, but the result quality is not good enough."
+    signals:
+      - "format okay, usefulness low"
+      - "result unstable across runs"
+      - "output misses the actual user intent"
+    default_next_step: adjust_current_tool_invocation
+
+  observability_gap:
+    description: "The agent cannot see enough about what happened to reason well."
+    signals:
+      - "unclear whether failure came from config, environment, or content"
+      - "tool reports too little"
+      - "missing logs, screenshots, stderr, or state visibility"
+    default_next_step: adjust_current_tool_invocation
+
+  recovery_gap:
+    description: "The initial tool path failed, and the agent has no strong fallback path."
+    signals:
+      - "tool failed and the agent loops"
+      - "retries repeat the same approach"
+      - "fallbacks are not explicit"
+    default_next_step: switch_tool_within_same_task
+
+  better_alternative_exists:
+    description: "The current path can work, but another tool family is usually better."
+    signals:
+      - "current tool is slower/more brittle"
+      - "public community prefers another route for this task"
+      - "agent is using legacy path despite a more suitable option"
+    default_next_step: switch_tool_within_same_task
+
+  hook_vs_model_boundary:
+    description: "The decision should not be left to model judgment at all."
+    signals:
+      - "must run every time"
+      - "high-risk step"
+      - "security / deploy / policy / mandatory automation"
+    default_next_step: move_to_hook_or_workflow
+
+  task_framing_issue:
+    description: "The tool choice confusion comes from an unclear or misframed task."
+    signals:
+      - "agent confuses desired output with artifact format"
+      - "goal is underspecified"
+      - "task should be split before picking a tool"
+    default_next_step: reframe_task_before_retry
+
+  not_a_tooling_problem:
+    description: "The issue is not meaningfully improved by changing tools."
+    signals:
+      - "user intent ambiguous"
+      - "model reasoning gap with no tool-path leverage"
+      - "external data simply unavailable"
+    default_next_step: stop_tooling_changes_not_a_tool_issue
+
+  unknown:
+    description: "Insufficient signal to classify with confidence."
+    signals:
+      - "intermittent failure"
+      - "multiple families plausible"
+      - "missing context"
+    default_next_step: ask_for_one_missing_constraint

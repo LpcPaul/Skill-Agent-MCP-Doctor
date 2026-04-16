@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0-alpha",
+  "project_name": "skill-agent-mcp-docter",
+  "generated_at": "2026-04-16T00:00:00Z",
+  "navigation_order": [
+    "task_category",
+    "journey_stage",
+    "suspected_problem_family",
+    "tool_triggered",
+    "recommended_next_step"
+  ],
+  "task_categories": [
+    "browse-web",
+    "read-files",
+    "transform-documents",
+    "create-presentation",
+    "analyze-data",
+    "code-editing",
+    "workflow-automation",
+    "communicate-and-publish",
+    "create-visual-assets",
+    "search-and-compare-tools",
+    "local-environment-setup",
+    "monitor-and-check"
+  ],
+  "problem_families": [
+    "environment",
+    "configuration",
+    "invocation",
+    "capability_mismatch",
+    "quality_miss",
+    "observability_gap",
+    "recovery_gap",
+    "better_alternative_exists",
+    "hook_vs_model_boundary",
+    "task_framing_issue",
+    "not_a_tooling_problem",
+    "unknown"
+  ],
+  "case_count": 0,
+  "cases": []
+}

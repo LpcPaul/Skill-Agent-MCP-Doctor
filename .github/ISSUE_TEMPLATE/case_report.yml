@@ -1,0 +1,156 @@
+name: "Task-Path Case Report"
+description: "Submit a task-first diagnosis case for Skill-Agent-MCP Docter"
+title: "[CASE] TASK_CATEGORY — JOURNEY_STAGE — PROBLEM_FAMILY"
+labels: ["case-report", "unverified"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Privacy reminder
+
+        Do **not** include:
+        - company names
+        - personal names
+        - private URLs
+        - local file paths
+        - business data
+        - code or document contents from private work
+
+        Focus on:
+        - the task
+        - the stage
+        - the symptom
+        - the tool path
+        - the next action
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - claude-code
+        - claude-ai
+        - openclaw
+        - codex
+        - cursor
+        - gemini-cli
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: task_category
+    attributes:
+      label: Task category
+      description: "Human task, not tool name"
+      placeholder: "e.g. browse-web"
+    validations:
+      required: true
+
+  - type: input
+    id: task_goal
+    attributes:
+      label: Task goal
+      description: "Abstract user goal"
+      placeholder: "e.g. Extract main content from a public webpage"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: journey_stage
+    attributes:
+      label: Journey stage
+      options:
+        - understand-task
+        - choose-capability
+        - configure-capability
+        - execute-task
+        - validate-output
+        - recover-from-failure
+        - optimize-tool-path
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed_symptom
+    attributes:
+      label: Observed symptom
+      description: "Describe the surface symptom, not the full diagnosis"
+      placeholder: "e.g. content extracted from the page was incomplete"
+    validations:
+      required: true
+
+  - type: input
+    id: tool_triggered
+    attributes:
+      label: Current tool path element
+      placeholder: "e.g. browser-cdp"
+
+  - type: dropdown
+    id: tool_type
+    attributes:
+      label: Tool type
+      options:
+        - skill
+        - mcp
+        - plugin
+        - builtin
+        - agent
+        - workflow
+        - hook
+        - unknown
+
+  - type: dropdown
+    id: suspected_problem_family
+    attributes:
+      label: Suspected problem family
+      options:
+        - environment
+        - configuration
+        - invocation
+        - capability_mismatch
+        - quality_miss
+        - observability_gap
+        - recovery_gap
+        - better_alternative_exists
+        - hook_vs_model_boundary
+        - task_framing_issue
+        - not_a_tooling_problem
+        - unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted_actions
+    attributes:
+      label: Attempted actions
+      description: "What was already tried?"
+      placeholder: |
+        - retried current tool
+        - changed output format request
+        - checked one alternative
+
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Recommended next action
+      description: "What should the next action be?"
+      placeholder: |
+        Primary next step:
+        switch_tool_within_same_task
+
+        Why:
+        the current path is a weak fit for the task constraints
+
+        Candidate alternatives:
+        - web_fetch for simple public pages
+        - playwright-mcp for dynamic rendering
+    validations:
+      required: true
+
+  - type: textarea
+    id: full_json
+    attributes:
+      label: Full case JSON (optional)
+      description: "Paste a v2 case object if available"
+      render: json

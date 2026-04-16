@@ -1,0 +1,105 @@
+name: Validate Case Report
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  validate:
+    if: contains(github.event.issue.labels.*.name, 'case-report')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Extract JSON from issue body
+        id: extract
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const jsonMatch = body.match(/```json\s*\n([\s\S]*?)\n```/);
+            if (jsonMatch) {
+              const fs = require('fs');
+              fs.writeFileSync('/tmp/case_from_issue.json', jsonMatch[1]);
+              core.setOutput('has_json', 'true');
+            } else {
+              core.setOutput('has_json', 'false');
+            }
+
+      - name: Run redaction check on JSON
+        if: steps.extract.outputs.has_json == 'true'
+        id: redact
+        run: |
+          RESULT=$(python3 scripts/redact.py --input /tmp/case_from_issue.json --dry-run 2>&1) || EXIT_CODE=$?
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESULT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "exit_code=${EXIT_CODE:-0}" >> $GITHUB_OUTPUT
+
+      - name: Check issue text for sensitive patterns
+        id: text_check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const warnings = [];
+            if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(body)) warnings.push('Possible email address detected');
+            if (/(?:sk|pk|api|key|token|secret|bearer)[_-]?[a-zA-Z0-9]{16,}/i.test(body)) warnings.push('Possible secret detected');
+            if (/(?:\/Users\/|\/home\/|[A-Z]:\\)/.test(body)) warnings.push('Possible local file path detected');
+            if (/https?:\/\//.test(body)) warnings.push('Possible URL detected');
+            if (/customer|client|revenue|confidential|private repo/i.test(body)) warnings.push('Possible business/private context detected');
+            core.setOutput('warnings', JSON.stringify(warnings));
+
+      - name: Post validation comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hasJson = '${{ steps.extract.outputs.has_json }}' === 'true';
+            const redactResult = `${{ steps.redact.outputs.result }}`;
+            const redactExit = '${{ steps.redact.outputs.exit_code }}';
+            const warnings = JSON.parse('${{ steps.text_check.outputs.warnings }}');
+
+            let comment = '## Skill-Agent-MCP Docter — Automated Validation\n\n';
+            comment += 'This workflow is schema-agnostic but aligned with the v2 task-first contribution model.\n\n';
+
+            if (hasJson) {
+              if (redactExit === '0') {
+                comment += '✅ JSON case payload passed current redaction checks.\n\n';
+              } else {
+                comment += '⚠️ JSON case payload needs review or script updates for v2 fields.\n\n';
+                comment += '```\n' + redactResult + '\n```\n\n';
+              }
+            } else {
+              comment += 'ℹ️ No embedded JSON block found. Manual review needed.\n\n';
+            }
+
+            if (warnings.length > 0) {
+              comment += '### Privacy warnings\n';
+              warnings.forEach(w => comment += `- ${w}\n`);
+              comment += '\nPlease edit the issue if any private context slipped in.\n\n';
+            } else {
+              comment += '✅ No obvious privacy patterns detected in the issue body.\n\n';
+            }
+
+            comment += 'Preferred review lens for v2:\n';
+            comment += '- task category is clear\n';
+            comment += '- journey stage is correct\n';
+            comment += '- symptom is concrete\n';
+            comment += '- next action is actionable\n';
+            comment += '- private business context is absent\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });

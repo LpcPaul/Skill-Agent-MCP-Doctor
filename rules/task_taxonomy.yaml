@@ -1,0 +1,46 @@
+# Suggested high-frequency task categories
+#
+# Keep this list stable. Expand only when navigation improves.
+#
+task_categories:
+  browse-web:
+    description: "Visit websites, fetch content, render dynamic pages, interact with web UI, submit forms, or extract web data."
+    common_constraints:
+      - "dynamic rendering"
+      - "login state"
+      - "anti-bot friction"
+      - "browser session"
+      - "page interaction"
+
+  read-files:
+    description: "Read PDFs, docs, images, code files, or local artifacts."
+
+  transform-documents:
+    description: "Convert files between formats, restructure content, merge/split artifacts."
+
+  create-presentation:
+    description: "Create decks, outlines, slides, visual narratives, or export presentation artifacts."
+
+  analyze-data:
+    description: "Inspect tables, compute metrics, build summaries, or generate charts from data."
+
+  code-editing:
+    description: "Read codebases, change code, fix bugs, add tests, review code, or generate docs."
+
+  workflow-automation:
+    description: "Coordinate multi-step jobs, recurring automations, and repeatable execution paths."
+
+  communicate-and-publish:
+    description: "Send email, write issues, post updates, publish summaries, or notify collaborators."
+
+  create-visual-assets:
+    description: "Generate diagrams, mind maps, visual drafts, screenshots, or image-like assets."
+
+  search-and-compare-tools:
+    description: "Compare candidate skills, MCPs, plugins, agents, or built-ins for a task."
+
+  local-environment-setup:
+    description: "Install, configure, verify, or troubleshoot local tools and runtime dependencies."
+
+  monitor-and-check:
+    description: "Watch for changes, validate availability, check status, or perform repeated inspections."

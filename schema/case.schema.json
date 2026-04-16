@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skill-Agent-MCP Docter Case Report",
+  "description": "Task-first schema for AI tool-path diagnosis cases.",
+  "type": "object",
+  "required": [
+    "case_id",
+    "timestamp",
+    "platform",
+    "task_category",
+    "task_goal",
+    "journey_stage",
+    "observed_symptom",
+    "tool_triggered",
+    "tool_type",
+    "suspected_problem_family",
+    "diagnosis_summary",
+    "recommended_next_step"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]{6,40}$",
+      "description": "Unique case ID. Example: 2026-04-16-browse-web-001"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "claude-code",
+        "claude-ai",
+        "openclaw",
+        "codex",
+        "cursor",
+        "gemini-cli",
+        "other"
+      ]
+    },
+    "task_category": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Human task category, not a tool name."
+    },
+    "task_goal": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Abstract goal the agent was trying to complete."
+    },
+    "journey_stage": {
+      "type": "string",
+      "enum": [
+        "understand-task",
+        "choose-capability",
+        "configure-capability",
+        "execute-task",
+        "validate-output",
+        "recover-from-failure",
+        "optimize-tool-path"
+      ]
+    },
+    "observed_symptom": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Surface symptom. Example: incomplete page content."
+    },
+    "symptom_tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "maxItems": 12
+    },
+    "tool_triggered": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Name of the currently used tool or path segment."
+    },
+    "tool_type": {
+      "type": "string",
+      "enum": [
+        "skill",
+        "mcp",
+        "plugin",
+        "builtin",
+        "agent",
+        "workflow",
+        "hook",
+        "unknown"
+      ]
+    },
+    "other_tools_in_path": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "skill",
+              "mcp",
+              "plugin",
+              "builtin",
+              "agent",
+              "workflow",
+              "hook",
+              "unknown"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 20
+    },
+    "suspected_problem_family": {
+      "type": "string",
+      "enum": [
+        "environment",
+        "configuration",
+        "invocation",
+        "capability_mismatch",
+        "quality_miss",
+        "observability_gap",
+        "recovery_gap",
+        "better_alternative_exists",
+        "hook_vs_model_boundary",
+        "task_framing_issue",
+        "not_a_tooling_problem",
+        "unknown"
+      ]
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "requires_login": {
+          "type": "boolean"
+        },
+        "requires_dynamic_render": {
+          "type": "boolean"
+        },
+        "requires_local_filesystem": {
+          "type": "boolean"
+        },
+        "requires_network": {
+          "type": "boolean"
+        },
+        "requires_deterministic_execution": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300
+        }
+      },
+      "additionalProperties": false
+    },
+    "attempted_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 180
+      },
+      "maxItems": 20
+    },
+    "diagnosis_summary": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "Abstract engineering diagnosis of the blockage."
+    },
+    "recommended_next_step": {
+      "type": "string",
+      "enum": [
+        "adjust_current_tool_invocation",
+        "switch_tool_within_same_task",
+        "inspect_environment_or_permissions",
+        "move_to_hook_or_workflow",
+        "reframe_task_before_retry",
+        "ask_for_one_missing_constraint",
+        "stop_tooling_changes_not_a_tool_issue",
+        "other"
+      ]
+    },
+    "recommendation_detail": {
+      "type": "string",
+      "maxLength": 600
+    },
+    "alternatives_considered": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "skill",
+              "mcp",
+              "plugin",
+              "builtin",
+              "agent",
+              "workflow",
+              "hook",
+              "unknown"
+            ]
+          },
+          "better_for": {
+            "type": "string",
+            "maxLength": 180
+          },
+          "tradeoff": {
+            "type": "string",
+            "maxLength": 180
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 12
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "resolved",
+        "partially_resolved",
+        "unresolved",
+        "unknown"
+      ]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "source_reference": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Abstract source tag only. No private URLs or usernames."
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "related_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20
+    },
+    "legacy_mapping": {
+      "type": "object",
+      "properties": {
+        "legacy_failure_type": {
+          "type": "string"
+        },
+        "legacy_skill_triggered": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,66 @@
+{
+  "case_id": "2026-04-16-browse-web-001",
+  "timestamp": "2026-04-16T00:00:00Z",
+  "platform": "claude-code",
+  "task_category": "browse-web",
+  "task_goal": "Extract main content from a public webpage.",
+  "journey_stage": "execute-task",
+  "observed_symptom": "The page opened, but the extracted content was incomplete.",
+  "symptom_tags": [
+    "partial-content",
+    "dynamic-page"
+  ],
+  "tool_triggered": "browser-cdp",
+  "tool_type": "skill",
+  "other_tools_in_path": [
+    {
+      "name": "web_fetch",
+      "type": "builtin",
+      "role": "candidate alternative"
+    },
+    {
+      "name": "playwright-mcp",
+      "type": "mcp",
+      "role": "candidate alternative"
+    }
+  ],
+  "suspected_problem_family": "capability_mismatch",
+  "constraints": {
+    "requires_login": false,
+    "requires_dynamic_render": true,
+    "requires_local_filesystem": false,
+    "requires_network": true,
+    "requires_deterministic_execution": false,
+    "notes": "The target page appears to rely on client-side rendering."
+  },
+  "attempted_actions": [
+    "Used current browser skill once",
+    "Retried extraction without changing the rendering strategy"
+  ],
+  "diagnosis_summary": "The current path is plausible for simple browsing, but it is a poor fit for content extraction on a dynamically rendered page. The agent is repeating the same route instead of switching to a capability better suited for render-dependent content.",
+  "recommended_next_step": "switch_tool_within_same_task",
+  "recommendation_detail": "If the page is public and simple, try a built-in fetch path first. If rendering is required, switch to a browser path with stronger support for dynamic pages. If login becomes necessary, use a plugin or browser session route that preserves authentication state.",
+  "alternatives_considered": [
+    {
+      "name": "web_fetch",
+      "type": "builtin",
+      "better_for": "Simple public pages without rendering needs",
+      "tradeoff": "May fail on client-rendered pages"
+    },
+    {
+      "name": "playwright-mcp",
+      "type": "mcp",
+      "better_for": "Dynamic pages and richer interaction",
+      "tradeoff": "Requires stronger setup/configuration"
+    }
+  ],
+  "outcome": "partially_resolved",
+  "confidence": "medium",
+  "source_reference": "public-discussion-pattern",
+  "verified": false,
+  "related_cases": [],
+  "legacy_mapping": {
+    "legacy_failure_type": "wrong_skill_selected",
+    "legacy_skill_triggered": "browser-cdp"
+  }
+}
