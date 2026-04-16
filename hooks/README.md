@@ -1,4 +1,4 @@
-# Hooks — deterministic complements for Skill-Agent-MCP Docter
+# Hooks — deterministic complements for AgentRX
 
 Hooks are still important in the new architecture, but their role is now more precise.
 

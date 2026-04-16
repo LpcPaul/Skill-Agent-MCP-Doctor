@@ -1,6 +1,6 @@
 {
   "version": "2.0.0-alpha",
-  "project_name": "skill-agent-mcp-docter",
+  "project_name": "agentrx",
   "generated_at": "2026-04-16T00:00:00Z",
   "navigation_order": [
     "task_category",

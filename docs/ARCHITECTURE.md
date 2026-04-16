@@ -1,4 +1,4 @@
-# Architecture — Skill-Agent-MCP Docter
+# Architecture — AgentRX
 
 ## One sentence summary
 

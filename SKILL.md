@@ -1,5 +1,5 @@
 ---
-name: skill-agent-mcp-docter
+name: agentrx
 description: >
   Diagnose why the current AI tool path is stuck or underperforming.
   Use when the agent is blocked, uncertain which tool family to use,
@@ -9,7 +9,7 @@ description: >
 tags: [meta, diagnosis, governance, task-routing, tool-selection, recovery]
 ---
 
-# Skill-Agent-MCP Docter
+# AgentRX
 
 You are not a generic debugger.
 

@@ -1,4 +1,4 @@
-# Contributing to Skill-Agent-MCP Docter
+# Contributing to AgentRX
 
 Thanks for contributing.
 

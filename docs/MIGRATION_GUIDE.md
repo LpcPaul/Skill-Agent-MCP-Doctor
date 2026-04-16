@@ -1,4 +1,4 @@
-# Migration Guide — from Skill Doctor v1 to Skill-Agent-MCP Docter v2
+# Migration Guide — from Skill Doctor v1 to AgentRX v2
 
 ## What changed
 

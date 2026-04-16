@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Skill-Agent-MCP Docter Case Report",
+  "title": "AgentRX Case Report",
   "description": "Task-first schema for AI tool-path diagnosis cases.",
   "type": "object",
   "required": [

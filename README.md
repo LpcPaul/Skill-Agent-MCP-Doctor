@@ -1,6 +1,6 @@
-# Skill-Agent-MCP Docter
+# AgentRX
 
-> Formerly **Skill Doctor**  
+> Formerly **Skill Doctor**
 > A task-first diagnosis and action-navigation layer for AI tools: skills, MCP servers, plugins, built-in tools, agents, and workflows.
 
 ## Why this project changed
@@ -28,7 +28,7 @@ It is about **AI tool-path diagnosis and next-step recommendation**.
 
 ## Core positioning
 
-Skill-Agent-MCP Docter is a **meta-skill / governance layer** that helps an AI agent when it is stuck.
+AgentRX is a **meta-skill / governance layer** that helps an AI agent when it is stuck.
 
 It does four things:
 
@@ -134,6 +134,31 @@ README.md
 SKILL.md
 ```
 
+## A concrete example
+
+```
+User: Extract the product list from this page.
+
+AI: [tries browser-cdp skill]
+    The page uses JavaScript to render content. browser-cdp only 
+    returned the initial HTML shell. Data missing.
+
+[AgentRX activates]
+
+AgentRX: You hit a `capability_mismatch` at the execute-task stage.
+         
+         Two alternatives exist in your current environment:
+         
+         1. web-access skill  — handles post-render DOM, best for this task
+         2. Playwright MCP    — better if you also need interaction 
+                                (clicks, scrolls, form fills)
+         
+         Prescription: switch to web-access.
+         Confidence: high. Based on 8 similar cases in cases/web-browsing/.
+```
+
+This is what AgentRX does: turns a stuck state into a structured next-step decision.
+
 ## What changed from the old version
 
 ### Old model
@@ -151,27 +176,23 @@ SKILL.md
 
 ## Install
 
-Until you rename the GitHub repository itself, you can still clone from the current slug and place it under the new local folder name.
-
 ### Claude Code
 
 ```bash
-git clone https://github.com/LpcPaul/skill-doctor.git ~/.claude/skills/skill-agent-mcp-docter
+git clone https://github.com/LpcPaul/AgentRX.git ~/.claude/skills/agentrx
 ```
 
 ### OpenClaw / ClawHub
 
 ```bash
-git clone https://github.com/LpcPaul/skill-doctor.git ~/.openclaw/skills/skill-agent-mcp-docter
+git clone https://github.com/LpcPaul/AgentRX.git ~/.openclaw/skills/agentrx
 ```
 
 ### Codex / Cursor / other skill-compatible runtimes
 
 ```bash
-git clone https://github.com/LpcPaul/skill-doctor.git ~/.codex/skills/skill-agent-mcp-docter
+git clone https://github.com/LpcPaul/AgentRX.git ~/.codex/skills/agentrx
 ```
-
-When the GitHub repository slug is renamed, replace the URL accordingly.
 
 ## Trigger conditions
 
