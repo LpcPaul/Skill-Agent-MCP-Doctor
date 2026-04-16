@@ -177,6 +177,11 @@
       },
       "maxItems": 20
     },
+    "desired_outcome": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "What the agent actually needs next. Examples: choose a better tool path, recover with a stronger alternative, decide between two routes."
+    },
     "diagnosis_summary": {
       "type": "string",
       "maxLength": 400,
@@ -197,7 +202,8 @@
     },
     "recommendation_detail": {
       "type": "string",
-      "maxLength": 600
+      "maxLength": 600,
+      "description": "Why this next step is recommended, with candidate tools and tradeoffs."
     },
     "alternatives_considered": {
       "type": "array",

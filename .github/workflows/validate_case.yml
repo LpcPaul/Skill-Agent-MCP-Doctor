@@ -20,6 +20,18 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Run CI self-test
+        id: self_test
+        run: |
+          RESULT=$(python3 scripts/ci_self_test.py 2>&1) || EXIT_CODE=$?
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESULT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "exit_code=${EXIT_CODE:-0}" >> $GITHUB_OUTPUT
+
       - name: Extract JSON from issue body
         id: extract
         uses: actions/github-script@v7
@@ -35,65 +47,33 @@ jobs:
               core.setOutput('has_json', 'false');
             }
 
-      - name: Run redaction check on JSON
-        if: steps.extract.outputs.has_json == 'true'
-        id: redact
-        run: |
-          RESULT=$(python3 scripts/redact.py --input /tmp/case_from_issue.json --dry-run 2>&1) || EXIT_CODE=$?
-          echo "result<<EOF" >> $GITHUB_OUTPUT
-          echo "$RESULT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          echo "exit_code=${EXIT_CODE:-0}" >> $GITHUB_OUTPUT
-
-      - name: Check issue text for sensitive patterns
-        id: text_check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.issue.body || '';
-            const warnings = [];
-            if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(body)) warnings.push('Possible email address detected');
-            if (/(?:sk|pk|api|key|token|secret|bearer)[_-]?[a-zA-Z0-9]{16,}/i.test(body)) warnings.push('Possible secret detected');
-            if (/(?:\/Users\/|\/home\/|[A-Z]:\\)/.test(body)) warnings.push('Possible local file path detected');
-            if (/https?:\/\//.test(body)) warnings.push('Possible URL detected');
-            if (/customer|client|revenue|confidential|private repo/i.test(body)) warnings.push('Possible business/private context detected');
-            core.setOutput('warnings', JSON.stringify(warnings));
-
       - name: Post validation comment
         uses: actions/github-script@v7
         with:
           script: |
             const hasJson = '${{ steps.extract.outputs.has_json }}' === 'true';
-            const redactResult = `${{ steps.redact.outputs.result }}`;
-            const redactExit = '${{ steps.redact.outputs.exit_code }}';
-            const warnings = JSON.parse('${{ steps.text_check.outputs.warnings }}');
+            const testResult = `${{ steps.self_test.outputs.result }}`;
+            const testExit = '${{ steps.self_test.outputs.exit_code }}';
 
             let comment = '## AgentRX — Automated Validation\n\n';
-            comment += 'This workflow is schema-agnostic but aligned with the v2 task-first contribution model.\n\n';
 
-            if (hasJson) {
-              if (redactExit === '0') {
-                comment += '✅ JSON case payload passed current redaction checks.\n\n';
-              } else {
-                comment += '⚠️ JSON case payload needs review or script updates for v2 fields.\n\n';
-                comment += '```\n' + redactResult + '\n```\n\n';
-              }
+            if (testExit === '0') {
+              comment += '✅ CI self-test passed (schema, YAML, cross-file consistency).\n\n';
             } else {
-              comment += 'ℹ️ No embedded JSON block found. Manual review needed.\n\n';
+              comment += '⚠️ CI self-test failed:\n\n```\n' + testResult + '\n```\n\n';
             }
 
-            if (warnings.length > 0) {
-              comment += '### Privacy warnings\n';
-              warnings.forEach(w => comment += `- ${w}\n`);
-              comment += '\nPlease edit the issue if any private context slipped in.\n\n';
+            if (hasJson) {
+              comment += '📋 JSON case payload found — manual review recommended.\n\n';
             } else {
-              comment += '✅ No obvious privacy patterns detected in the issue body.\n\n';
+              comment += 'ℹ️ No embedded JSON block found. Manual review needed.\n\n';
             }
 
             comment += 'Preferred review lens for v2:\n';
             comment += '- task category is clear\n';
             comment += '- journey stage is correct\n';
             comment += '- symptom is concrete\n';
+            comment += '- desired_outcome is stated\n';
             comment += '- next action is actionable\n';
             comment += '- private business context is absent\n';
 

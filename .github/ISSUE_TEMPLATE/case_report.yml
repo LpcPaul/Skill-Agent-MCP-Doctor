@@ -131,22 +131,54 @@ body:
         - checked one alternative
 
   - type: textarea
-    id: recommendation
+    id: desired_outcome
     attributes:
-      label: Recommended next action
-      description: "What should the next action be?"
+      label: Desired outcome
+      description: "What are you actually trying to accomplish next?"
+      placeholder: "e.g. choose a better tool path and continue the task"
+
+  - type: dropdown
+    id: recommended_next_step
+    attributes:
+      label: Recommended next step
+      options:
+        - adjust_current_tool_invocation
+        - switch_tool_within_same_task
+        - inspect_environment_or_permissions
+        - move_to_hook_or_workflow
+        - reframe_task_before_retry
+        - ask_for_one_missing_constraint
+        - stop_tooling_changes_not_a_tool_issue
+        - other
+
+  - type: textarea
+    id: recommendation_detail
+    attributes:
+      label: Recommendation detail
+      description: "Why this next step, and what are the candidate alternatives?"
       placeholder: |
-        Primary next step:
-        switch_tool_within_same_task
+        Primary: switch to web-access skill
+        Why: current tool is too weak for dynamic rendering
+        Alternatives: playwright-mcp (better for interaction), web_fetch (simpler but less capable)
 
-        Why:
-        the current path is a weak fit for the task constraints
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - resolved
+        - partially_resolved
+        - unresolved
+        - unknown
 
-        Candidate alternatives:
-        - web_fetch for simple public pages
-        - playwright-mcp for dynamic rendering
-    validations:
-      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      options:
+        - high
+        - medium
+        - low
 
   - type: textarea
     id: full_json
