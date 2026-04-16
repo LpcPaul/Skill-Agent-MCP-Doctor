@@ -1,256 +1,40 @@
 name: "Case Report (AI Contributor)"
-description: "Submit a stuck-state diagnosis case for AgentRX. This form is designed for AI / agent contributors."
+description: "Submit a stuck-state diagnosis case for AgentRX. AI contributors must submit complete v2.1 JSON."
 title: "[CASE] TASK — JOURNEY_STAGE — PROBLEM_FAMILY"
 labels: ["case-report", "unverified"]
 body:
   - type: markdown
     attributes:
       value: |
-        ## AgentRX Case Report — v2.1
+        ## AgentRX Case Report — v2.1 (JSON-only)
 
-        This form is designed for **AI contributors**.
-        Cases are split into **evidence** (observable facts) and **inference** (diagnosis + prescription).
+        **AI contributors must submit a complete v2.1 case JSON.**
+        Human fallback / form-to-JSON assembly is no longer supported.
+
+        Paste your full v2.1 case JSON in the field below. The workflow will validate it against `schema/case.schema.json` and `rules/*.yaml`.
 
         **Privacy:** Do not include company names, personal names, private URLs, local file paths, business data, or code/document contents from private work.
 
-  # ── EVIDENCE ────────────────────────────────────────────────
-
-  - type: markdown
-    attributes:
-      value: "## Evidence — observable facts from the stuck context"
-
-  - type: input
-    id: evidence_task
-    attributes:
-      label: Task
-      description: "What job was being attempted? Human-task level, not tool name."
-      placeholder: "e.g. browse-web"
-    validations:
-      required: true
-
-  - type: input
-    id: evidence_desired_outcome
-    attributes:
-      label: Desired outcome
-      description: "What was the agent trying to accomplish next?"
-      placeholder: "e.g. extract main content from a public page"
-    validations:
-      required: true
-
-  - type: input
-    id: evidence_attempted_path
-    attributes:
-      label: Attempted path
-      description: "What tool or path was used?"
-      placeholder: "e.g. browser-cdp"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: evidence_tool_type
-    attributes:
-      label: Tool type
-      options:
-        - skill
-        - mcp
-        - plugin
-        - builtin
-        - agent
-        - workflow
-        - hook
-        - unknown
-    validations:
-      required: true
-
   - type: textarea
-    id: evidence_symptom
+    id: full_case_json
     attributes:
-      label: Symptom
-      description: "Surface-level observation. No diagnosis language."
-      placeholder: "e.g. extracted content was incomplete"
-    validations:
-      required: true
-
-  - type: textarea
-    id: evidence_reproduction_steps
-    attributes:
-      label: Reproduction steps
-      description: "What was already tried? Prevents looped retries."
-      placeholder: |
-        - used browser-cdp once
-        - retried extraction without changing rendering strategy
-
-  - type: textarea
-    id: evidence_context
-    attributes:
-      label: Context (optional)
-      description: "Additional context explaining the situation without business specifics."
-
-  - type: textarea
-    id: evidence_environment_notes
-    attributes:
-      label: Environment notes (optional)
-      description: "Platform, constraints, or runtime details."
-      placeholder: |
-        Platform: claude-code
-        Requires dynamic render: true
-        Requires network: true
-
-  - type: input
-    id: evidence_failed_step
-    attributes:
-      label: Failed step (optional)
-      description: "The specific step in the tool path that failed."
-      placeholder: "e.g. DOM content extraction returned empty"
-
-  - type: textarea
-    id: evidence_artifacts_used
-    attributes:
-      label: Artifacts used (optional)
-      description: "Abstract file types or resource types. No private file paths."
-      placeholder: "e.g. HTML page, public URL"
-
-  # ── INFERENCE ───────────────────────────────────────────────
-
-  - type: markdown
-    attributes:
-      value: "## Inference — AI-generated diagnosis and prescription"
-
-  - type: dropdown
-    id: inference_journey_stage
-    attributes:
-      label: Journey stage
-      description: "Where in the task journey is the blockage?"
-      options:
-        - understand-task
-        - choose-capability
-        - configure-capability
-        - execute-task
-        - validate-output
-        - recover-from-failure
-        - optimize-tool-path
-    validations:
-      required: true
-
-  - type: dropdown
-    id: inference_problem_family
-    attributes:
-      label: Problem family
-      options:
-        - environment
-        - configuration
-        - invocation
-        - capability_mismatch
-        - quality_miss
-        - observability_gap
-        - recovery_gap
-        - better_alternative_exists
-        - hook_vs_model_boundary
-        - task_framing_issue
-        - not_a_tooling_problem
-        - unknown
-    validations:
-      required: true
-
-  - type: textarea
-    id: inference_why_current_path_failed
-    attributes:
-      label: Why current path failed
-      description: "Short explanation of why the current path is unsuitable for continued progress. This is inference, not evidence."
-      placeholder: "e.g. the current tool only captures static HTML, but the page requires client-side rendering"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: inference_best_candidate_route_id
-    attributes:
-      label: Best candidate route id
-      description: "Must be a standard route id from rules/routes.yaml. NOT a tool brand name."
-      options:
-        - switch_to_web_research
-        - switch_to_official_docs
-        - switch_to_local_file_inspection
-        - switch_to_api_or_connector_access
-        - switch_to_environment_debugging
-        - request_missing_input
-        - decompose_task_first
-        - switch_to_repro_minimization
-        - switch_to_schema_or_format_validation
-        - switch_to_alternative_tool_path
-    validations:
-      required: true
-
-  - type: textarea
-    id: inference_best_candidate_route_detail
-    attributes:
-      label: Route detail (optional)
-      description: "Why this route is recommended. May reference specific tools or strategies."
-
-  - type: textarea
-    id: inference_prerequisites_for_switch
-    attributes:
-      label: Prerequisites for switch (optional)
-      description: "Lightweight checklist. One per line."
-      placeholder: |
-        internet_access
-        repo_access
-
-  - type: dropdown
-    id: inference_confidence
-    attributes:
-      label: Confidence
-      options:
-        - high
-        - medium
-        - low
-
-  # ── RESOLUTION ──────────────────────────────────────────────
-
-  - type: markdown
-    attributes:
-      value: "## Resolution — what happened after the recommendation"
-
-  - type: dropdown
-    id: resolution_outcome
-    attributes:
-      label: Outcome
-      options:
-        - resolved
-        - partially_resolved
-        - unresolved
-        - unknown
-
-  - type: textarea
-    id: resolution_follow_up_notes
-    attributes:
-      label: Follow-up notes (optional)
-
-  # ── METADATA ────────────────────────────────────────────────
-
-  - type: markdown
-    attributes:
-      value: "## Metadata"
-
-  - type: dropdown
-    id: metadata_source
-    attributes:
-      label: Source
-      options:
-        - local-intake
-        - remote-search
-        - user-reported
-        - other
-
-  - type: textarea
-    id: metadata_tags
-    attributes:
-      label: Tags
-      description: "Comma-separated searchable tags."
-      placeholder: "browse-web, execute-task, capability_mismatch"
-
-  - type: textarea
-    id: full_json
-    attributes:
-      label: Full case JSON (optional fallback)
-      description: "Paste a complete v2.1 case object to override form fields. This is a fallback path for maintainers or when the form cannot capture complex cases. If provided, this JSON takes priority over structured fields."
+      label: Full case JSON
+      description: "Paste a complete v2.1 case JSON object. Must be a valid fenced JSON block. See `schema/case.schema.json` for the full schema."
       render: json
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: privacy_acknowledgement
+    attributes:
+      label: Privacy acknowledgement
+      description: "Confirm that this case does not contain private or business-specific data."
+      options:
+        - label: "I confirm this case contains no private business context."
+          required: true
+
+  - type: textarea
+    id: note
+    attributes:
+      label: Note (optional)
+      description: "Free-text note for maintainers. Not part of the case JSON."

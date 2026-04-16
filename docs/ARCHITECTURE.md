@@ -182,9 +182,11 @@ When the system works as intended:
 
 | Script | Purpose |
 |---|---|
-| `validate_case.py` | Validate a case against schema + route registry |
+| `validate_case.py` | Validate a case against JSON Schema + route registry |
+| `generate_schema.py` | Generate schema/case.schema.json from rules/*.yaml |
 | `build_index.py` | Rebuild cases/index.json from all case files |
-| `parse_issue_form.py` | Assemble v2.1 case JSON from GitHub issue form fields |
+| `retrieve_cases.py` | Deterministic retrieval of top-k candidate cases |
+| `new_case_id.py` | Generate a new case ID in canonical format |
 | `ci_self_test.py` | Run all validation checks |
 
 ## Design Constraint

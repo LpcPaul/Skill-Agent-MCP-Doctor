@@ -1,341 +1,225 @@
 #!/usr/bin/env python3
 """
-AgentRX — Case Validation Script
+AgentRX — Validate a case JSON file.
 
-Validates a case JSON file against:
-1. schema/case.schema.json (JSON Schema)
-2. rules/routes.yaml (route id must exist)
-3. rules/journey_stages.yaml (journey stage must exist)
-4. rules/problem_families.yaml (problem family must exist)
+Two-layer validation:
+1. JSON Schema validation (via jsonschema library)
+2. Cross-file rule consistency (routes, journey stages, problem families, task taxonomy)
 
 Usage:
-    python3 scripts/validate_case.py --input /path/to/case.json
-    python3 scripts/validate_case.py --input /path/to/case.json --strict
-
-Exit codes:
-    0 — valid
-    1 — validation errors found
-    2 — schema or config file missing
-    3 — input file not found or not valid JSON
+    python3 scripts/validate_case.py --input path/to/case.json
+    python3 scripts/validate_case.py --input path/to/case.json --normalize
 """
 
 import argparse
 import json
 import sys
-import yaml
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).parent.parent
-SCHEMA_PATH = REPO_ROOT / "schema" / "case.schema.json"
-ROUTES_PATH = REPO_ROOT / "rules" / "routes.yaml"
-STAGES_PATH = REPO_ROOT / "rules" / "journey_stages.yaml"
-FAMILIES_PATH = REPO_ROOT / "rules" / "problem_families.yaml"
+try:
+    import jsonschema
+except ImportError:
+    print("ERROR: jsonschema is required. Install with: pip install jsonschema", file=sys.stderr)
+    sys.exit(1)
+
+import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+SCHEMA_PATH = ROOT / "schema" / "case.schema.json"
+RULES_DIR = ROOT / "rules"
+
+# Deprecated value -> new value mappings for problem families
+DEPRECATED_FAMILY_MAP = {
+    "environment": "environment_or_config",
+    "configuration": "environment_or_config",
+    "observability_gap": "recovery_gap",
+    "better_alternative_exists": "capability_mismatch",
+    "hook_vs_model_boundary": "not_a_tooling_problem",
+    "unknown": "environment_or_config",
+}
 
 
-def load_yaml(path: Path):
-    """Load a YAML file, return dict."""
-    with open(path) as f:
-        return yaml.safe_load(f)
-
-
-def load_json(path: Path):
-    """Load a JSON file, return dict."""
-    with open(path) as f:
+def load_schema() -> dict:
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def validate_schema(case: dict, schema: dict) -> list[str]:
-    """Basic JSON Schema validation (required fields, types, enums)."""
+def load_rules() -> dict:
+    rules = {}
+    for filename in ["routes.yaml", "journey_stages.yaml", "problem_families.yaml", "task_taxonomy.yaml"]:
+        path = RULES_DIR / filename
+        with open(path, "r", encoding="utf-8") as f:
+            rules[filename] = yaml.safe_load(f)
+    return rules
+
+
+def get_valid_route_ids(routes_data: dict) -> set:
+    return set(routes_data.get("routes", {}).keys())
+
+
+def get_deprecated_routes(routes_data: dict) -> dict:
+    return routes_data.get("deprecated_routes", {})
+
+
+def validate_schema(case_data: dict, schema: dict) -> list[str]:
+    """Layer 1: JSON Schema validation."""
     errors = []
-
-    # Check required fields
-    for field in schema.get("required", []):
-        if field not in case:
-            errors.append(f"Missing required field: {field}")
-
-    props = schema.get("properties", {})
-
-    # Validate top-level properties
-    for field, value in case.items():
-        if field not in props:
-            if schema.get("additionalProperties") == False:
-                errors.append(f"Unknown field: {field}")
-            continue
-
-        prop_def = props[field]
-
-        # Type check
-        expected_type = prop_def.get("type")
-        if expected_type == "object" and not isinstance(value, dict):
-            errors.append(f"Field '{field}' must be an object, got {type(value).__name__}")
-        elif expected_type == "array" and not isinstance(value, list):
-            errors.append(f"Field '{field}' must be an array, got {type(value).__name__}")
-        elif expected_type == "string" and not isinstance(value, str):
-            errors.append(f"Field '{field}' must be a string, got {type(value).__name__}")
-        elif expected_type == "boolean" and not isinstance(value, bool):
-            errors.append(f"Field '{field}' must be a boolean, got {type(value).__name__}")
-
-        # Enum check
-        if "enum" in prop_def and isinstance(value, str):
-            if value not in prop_def["enum"]:
-                errors.append(f"Field '{field}' value '{value}' not in allowed values: {prop_def['enum']}")
-
-        # Const check
-        if "const" in prop_def and value != prop_def["const"]:
-            errors.append(f"Field '{field}' must be '{prop_def['const']}', got '{value}'")
-
-        # Max length check
-        if "maxLength" in prop_def and isinstance(value, str):
-            if len(value) > prop_def["maxLength"]:
-                errors.append(f"Field '{field}' exceeds maxLength {prop_def['maxLength']} (length: {len(value)})")
-
-        # Pattern check
-        if "pattern" in prop_def and isinstance(value, str):
-            import re
-            if not re.match(prop_def["pattern"], value):
-                errors.append(f"Field '{field}' does not match pattern: {prop_def['pattern']}")
-
-        # Nested object validation
-        if expected_type == "object" and isinstance(value, dict) and "properties" in prop_def:
-            nested_props = prop_def["properties"]
-            for nf, nv in value.items():
-                if nf not in nested_props:
-                    if prop_def.get("additionalProperties") == False:
-                        errors.append(f"Field '{field}' has unknown sub-field: {nf}")
-                    continue
-                nprop = nested_props[nf]
-                if "enum" in nprop and isinstance(nv, str) and nv not in nprop["enum"]:
-                    errors.append(f"Field '{field}.{nf}' value '{nv}' not in allowed values")
-
-        # Array item validation
-        if expected_type == "array" and isinstance(value, list) and "items" in prop_def:
-            item_def = prop_def["items"]
-            if "maxLength" in item_def:
-                for i, item in enumerate(value):
-                    if isinstance(item, str) and len(item) > item_def["maxLength"]:
-                        errors.append(f"Field '{field}[{i}]' exceeds maxLength {item_def['maxLength']}")
-            if "maxItems" in prop_def and len(value) > prop_def["maxItems"]:
-                errors.append(f"Field '{field}' has {len(value)} items, max is {prop_def['maxItems']}")
-            # Nested object items
-            if item_def.get("type") == "object" and "properties" in item_def:
-                item_props = item_def["properties"]
-                for i, item in enumerate(value):
-                    if isinstance(item, dict):
-                        for ik, iv in item.items():
-                            if ik in item_props and "enum" in item_props[ik]:
-                                if isinstance(iv, str) and iv not in item_props[ik]["enum"]:
-                                    errors.append(f"Field '{field}[{i}].{ik}' value '{iv}' not in allowed values")
-
-    # Validate nested evidence object
-    if "evidence" in case and isinstance(case["evidence"], dict):
-        evidence = case["evidence"]
-        evidence_def = props.get("evidence", {})
-        e_props = evidence_def.get("properties", {})
-
-        for ef in evidence_def.get("required", []):
-            if ef not in evidence:
-                errors.append(f"Missing required evidence field: {ef}")
-
-        if "attempted_path" in evidence and isinstance(evidence["attempted_path"], dict):
-            ap = evidence["attempted_path"]
-            ap_def = e_props.get("attempted_path", {})
-            for apf in ap_def.get("required", []):
-                if apf not in ap:
-                    errors.append(f"Missing required attempted_path field: {apf}")
-
-    # Validate nested inference object
-    if "inference" in case and isinstance(case["inference"], dict):
-        inference = case["inference"]
-        inference_def = props.get("inference", {})
-
-        for inf in inference_def.get("required", []):
-            if inf not in inference:
-                errors.append(f"Missing required inference field: {inf}")
-
-        # Check best_candidate_route_id is valid (will be validated against routes.yaml below)
-        if "best_candidate_route_id" in inference:
-            route_id = inference["best_candidate_route_id"]
-            if isinstance(route_id, str) and route_id not in get_valid_route_ids():
-                errors.append(f"Invalid route id: {route_id}")
-
+    try:
+        jsonschema.validate(instance=case_data, schema=schema)
+    except jsonschema.ValidationError as e:
+        # Extract a clean error message
+        path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
+        errors.append(f"Schema error at '{path}': {e.message}")
     return errors
 
 
-def get_valid_route_ids() -> set[str]:
-    """Load route ids from routes.yaml."""
-    try:
-        data = load_yaml(ROUTES_PATH)
-        routes = data.get("routes", {})
-        return set(routes.keys())
-    except Exception:
-        return set()
-
-
-def get_valid_stages() -> set[str]:
-    """Load journey stages from journey_stages.yaml."""
-    try:
-        data = load_yaml(STAGES_PATH)
-        return set(data.get("journey_stages", {}).keys())
-    except Exception:
-        return set()
-
-
-def get_valid_families() -> set[str]:
-    """Load problem families from problem_families.yaml."""
-    try:
-        data = load_yaml(FAMILIES_PATH)
-        return set(data.get("problem_families", {}).keys())
-    except Exception:
-        return set()
-
-
-def validate_cross_refs(case: dict) -> list[str]:
-    """Validate cross-file references."""
+def validate_cross_file(case_data: dict, rules: dict) -> tuple[list[str], list[str]]:
+    """Layer 2: Cross-file rule consistency. Returns (errors, warnings)."""
     errors = []
-    inference = case.get("inference", {})
+    warnings = []
 
-    # Journey stage must exist in rules
-    stage = inference.get("journey_stage")
-    if stage and stage not in get_valid_stages():
-        errors.append(f"journey_stage '{stage}' not found in rules/journey_stages.yaml")
+    inference = case_data.get("inference", {})
+    evidence = case_data.get("evidence", {})
 
-    # Problem family must exist in rules
-    family = inference.get("problem_family")
-    if family and family not in get_valid_families():
-        errors.append(f"problem_family '{family}' not found in rules/problem_families.yaml")
-
-    # Route id must exist in routes.yaml
+    # Validate route id
     route_id = inference.get("best_candidate_route_id")
-    if route_id and route_id not in get_valid_route_ids():
-        errors.append(f"best_candidate_route_id '{route_id}' not found in rules/routes.yaml")
+    if route_id:
+        valid_routes = get_valid_route_ids(rules["routes.yaml"])
+        deprecated_routes = get_deprecated_routes(rules["routes.yaml"])
 
-    return errors
+        if route_id in deprecated_routes:
+            new_route = deprecated_routes[route_id]
+            warnings.append(f"Deprecated route '{route_id}' used. Auto-mapped to '{new_route}'.")
+        elif route_id not in valid_routes:
+            errors.append(f"Invalid route id '{route_id}'. Must be one of: {', '.join(sorted(valid_routes))}")
 
+    # Validate journey stage
+    journey_stage = inference.get("journey_stage")
+    if journey_stage:
+        valid_stages = set(rules["journey_stages.yaml"].get("journey_stages", {}).keys())
+        if journey_stage not in valid_stages:
+            errors.append(f"Invalid journey_stage '{journey_stage}'. Must be one of: {', '.join(sorted(valid_stages))}")
 
-def normalize_v2_to_v21(case: dict) -> dict:
-    """
-    Convert a v2.0 flat case to v2.1 evidence/inference structure.
-    This is a best-effort normalization, not a perfect migration.
-    """
-    if case.get("schema_version") == "2.1":
-        return case
+    # Validate problem family (with deprecated mapping)
+    problem_family = inference.get("problem_family")
+    if problem_family:
+        valid_families = set(rules["problem_families.yaml"].get("problem_families", {}).keys())
+        if problem_family in DEPRECATED_FAMILY_MAP:
+            new_family = DEPRECATED_FAMILY_MAP[problem_family]
+            warnings.append(
+                f"Deprecated problem_family '{problem_family}' used. "
+                f"Auto-mapped to '{new_family}'."
+            )
+        elif problem_family not in valid_families:
+            errors.append(
+                f"Invalid problem_family '{problem_family}'. "
+                f"Must be one of: {', '.join(sorted(valid_families))}"
+            )
 
-    # Check if it looks like a v2.0 flat case
-    if "task_category" in case and "evidence" not in case:
-        normalized = {
-            "schema_version": "2.1",
-            "id": case.get("case_id", case.get("id", "unknown")),
-            "title": case.get("title", f"{case.get('task_category', 'unknown')} {case.get('journey_stage', 'unknown')} {case.get('suspected_problem_family', 'unknown')}"),
-            "summary": case.get("diagnosis_summary", case.get("recommendation_detail", "")),
-            "created_at": case.get("timestamp", case.get("created_at", "")),
-            "tags": case.get("tags", []),
-            "evidence": {
-                "task": case.get("task_category", ""),
-                "desired_outcome": case.get("task_goal", case.get("desired_outcome", "")),
-                "attempted_path": {
-                    "tool": case.get("tool_triggered", ""),
-                    "tool_type": case.get("tool_type", "unknown"),
-                    "other_tools": case.get("other_tools_in_path", [])
-                },
-                "symptom": case.get("observed_symptom", ""),
-                "symptom_tags": case.get("symptom_tags", []),
-                "context": "",
-                "environment": case.get("environment", case.get("constraints", {})),
-                "failed_step": "",
-                "artifacts_used": [],
-                "reproduction_steps": case.get("attempted_actions", [])
-            },
-            "inference": {
-                "journey_stage": case.get("journey_stage", "unknown"),
-                "problem_family": case.get("suspected_problem_family", "unknown"),
-                "why_current_path_failed": case.get("diagnosis_summary", ""),
-                "best_candidate_route_id": map_next_step_to_route(case.get("recommended_next_step", "")),
-                "best_candidate_route_detail": case.get("recommendation_detail", ""),
-                "prerequisites_for_switch": [],
-                "confidence": case.get("confidence", "medium")
-            },
-            "resolution": {
-                "outcome": case.get("outcome", "unknown"),
-                "follow_up_notes": ""
-            },
-            "verified": case.get("verified", False),
-            "related_cases": case.get("related_cases", []),
-            "legacy_mapping": {
-                "legacy_schema_version": case.get("schema_version", "2.0"),
-                "legacy_failure_type": case.get("legacy_mapping", {}).get("legacy_failure_type", ""),
-                "legacy_skill_triggered": case.get("legacy_mapping", {}).get("legacy_skill_triggered", ""),
-                "legacy_task_category": case.get("task_category", ""),
-                "legacy_journey_stage": case.get("journey_stage", "")
-            }
-        }
-        return normalized
+    # Validate task
+    task = evidence.get("task")
+    if task:
+        valid_tasks = set(rules["task_taxonomy.yaml"].get("task_categories", {}).keys())
+        if task not in valid_tasks:
+            errors.append(f"Invalid task '{task}'. Must be one of: {', '.join(sorted(valid_tasks))}")
 
-    return case
+    return errors, warnings
 
 
-def map_next_step_to_route(next_step: str) -> str:
-    """Map v2.0 recommended_next_step to v2.1 route id."""
-    mapping = {
-        "switch_tool_within_same_task": "switch_to_alternative_tool_path",
-        "adjust_current_tool_invocation": "switch_to_alternative_tool_path",
-        "inspect_environment_or_permissions": "switch_to_environment_debugging",
-        "move_to_hook_or_workflow": "decompose_task_first",
-        "reframe_task_before_retry": "request_missing_input",
-        "ask_for_one_missing_constraint": "request_missing_input",
-        "stop_tooling_changes_not_a_tool_issue": "request_missing_input",
-        "other": "switch_to_alternative_tool_path"
-    }
-    return mapping.get(next_step, "switch_to_alternative_tool_path")
+def normalize_case(case_data: dict) -> dict:
+    """Apply auto-mappings for deprecated values."""
+    inference = case_data.get("inference", {})
+
+    # Map deprecated problem families
+    old_family = inference.get("problem_family")
+    if old_family in DEPRECATED_FAMILY_MAP:
+        case_data["inference"]["problem_family"] = DEPRECATED_FAMILY_MAP[old_family]
+
+    # Map deprecated routes
+    routes_data = {}
+    routes_path = RULES_DIR / "routes.yaml"
+    with open(routes_path, "r", encoding="utf-8") as f:
+        routes_data = yaml.safe_load(f)
+
+    deprecated_routes = routes_data.get("deprecated_routes", {})
+    old_route = inference.get("best_candidate_route_id")
+    if old_route in deprecated_routes:
+        case_data["inference"]["best_candidate_route_id"] = deprecated_routes[old_route]
+
+    return case_data
+
+
+def validate_case(input_path: str, normalize: bool = False) -> int:
+    case_path = Path(input_path)
+    if not case_path.exists():
+        print(f"ERROR: File not found: {case_path}", file=sys.stderr)
+        return 1
+
+    with open(case_path, "r", encoding="utf-8") as f:
+        try:
+            case_data = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"ERROR: Invalid JSON: {e}", file=sys.stderr)
+            return 1
+
+    schema = load_schema()
+    rules = load_rules()
+
+    all_errors = []
+    all_warnings = []
+
+    # Layer 1: Schema validation
+    schema_errors = validate_schema(case_data, schema)
+    all_errors.extend(schema_errors)
+
+    # Layer 2: Cross-file validation
+    cross_errors, cross_warnings = validate_cross_file(case_data, rules)
+    all_errors.extend(cross_errors)
+    all_warnings.extend(cross_warnings)
+
+    # Apply normalization if requested
+    if normalize and (cross_warnings or cross_errors):
+        case_data = normalize_case(case_data)
+        with open(case_path, "w", encoding="utf-8") as f:
+            json.dump(case_data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+        print(f"Case normalized: {case_path}")
+
+        # Re-validate after normalization
+        all_errors = []
+        all_warnings = []
+        schema_errors = validate_schema(case_data, schema)
+        all_errors.extend(schema_errors)
+        cross_errors, cross_warnings = validate_cross_file(case_data, rules)
+        all_errors.extend(cross_errors)
+        all_warnings.extend(cross_warnings)
+
+    # Output results
+    if all_warnings:
+        for w in all_warnings:
+            print(f"WARNING: {w}")
+
+    if all_errors:
+        for e in all_errors:
+            print(f"ERROR: {e}")
+        return 1
+
+    if all_warnings and not all_errors:
+        print("Validation passed with warnings (auto-mapped deprecated values).")
+        return 0
+
+    print("Validation passed.")
+    return 0
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate an AgentRX case file")
-    parser.add_argument("--input", required=True, help="Path to case JSON file")
-    parser.add_argument("--strict", action="store_true", help="Fail on warnings too")
-    parser.add_argument("--normalize", action="store_true", help="Normalize v2.0 to v2.1 and write back")
+    parser = argparse.ArgumentParser(description="Validate a case JSON file against schema and rules.")
+    parser.add_argument("--input", required=True, help="Path to the case JSON file")
+    parser.add_argument("--normalize", action="store_true", help="Auto-map deprecated values and write back")
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-
-    # Check files exist
-    for path in [SCHEMA_PATH, ROUTES_PATH, STAGES_PATH, FAMILIES_PATH]:
-        if not path.exists():
-            print(f"ERROR: Required file missing: {path}", file=sys.stderr)
-            sys.exit(2)
-
-    if not input_path.exists():
-        print(f"ERROR: Input file not found: {input_path}", file=sys.stderr)
-        sys.exit(3)
-
-    try:
-        with open(input_path) as f:
-            case = json.load(f)
-    except json.JSONDecodeError as e:
-        print(f"ERROR: Invalid JSON: {e}", file=sys.stderr)
-        sys.exit(3)
-
-    # Normalize if requested
-    if args.normalize:
-        case = normalize_v2_to_v21(case)
-        with open(input_path, "w") as f:
-            json.dump(case, f, indent=2)
-        print(f"Normalized {input_path} to v2.1")
-
-    schema = load_json(SCHEMA_PATH)
-
-    # Run validation
-    errors = []
-    errors.extend(validate_schema(case, schema))
-    errors.extend(validate_cross_refs(case))
-
-    if errors:
-        print(f"FAILED: {len(errors)} error(s)")
-        for e in errors:
-            print(f"  - {e}")
-        sys.exit(1)
-    else:
-        print(f"PASSED: {input_path.name} is valid (schema_version: {case.get('schema_version', 'unknown')})")
-        sys.exit(0)
+    exit_code = validate_case(args.input, args.normalize)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

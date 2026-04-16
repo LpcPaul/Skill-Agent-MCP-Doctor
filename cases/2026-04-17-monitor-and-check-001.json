@@ -1,13 +1,13 @@
 {
   "schema_version": "2.1",
   "id": "2026-04-17-monitor-and-check-001",
-  "title": "monitor-and-check execute-task better_alternative_exists",
+  "title": "monitor-and-check execute-task capability_mismatch",
   "summary": "Agent attempted to monitor a cloud service's status by scraping a public status page, but the page structure changed and the scraper broke.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "monitor-and-check",
     "execute-task",
-    "better_alternative_exists",
+    "capability_mismatch",
     "status-monitoring"
   ],
   "evidence": {
@@ -15,29 +15,21 @@
     "desired_outcome": "Monitor the operational status of a cloud service and alert on incidents.",
     "attempted_path": {
       "tool": "browser-cdp",
-      "tool_type": "skill",
-      "other_tools": [
-        {
-          "name": "cloud-status-api-mcp",
-          "type": "mcp",
-          "role": "candidate alternative"
-        }
-      ]
+      "tool_type": "skill"
     },
-    "symptom": "The web scraper broke after the status page was redesigned. The CSS selectors no longer match, and the agent cannot maintain the scraper.",
+    "symptom": "The web scraper broke after the status page was redesigned. The CSS selectors no longer match.",
     "symptom_tags": [
       "scraper-broken",
       "brittle-automation"
     ],
-    "context": "The service provider offers an official status API with structured incident data, but the agent was not aware of it.",
+    "context": "The service provider offers an official status API with structured incident data.",
     "environment": {
       "platform": "openclaw",
       "requires_login": false,
       "requires_dynamic_render": true,
       "requires_local_filesystem": false,
       "requires_network": true,
-      "requires_deterministic_execution": false,
-      "notes": "API key available but not configured."
+      "requires_deterministic_execution": false
     },
     "failed_step": "Web scraper CSS selectors no longer match redesigned status page",
     "artifacts_used": [
@@ -46,27 +38,25 @@
     ],
     "reproduction_steps": [
       "Ran scraper — selectors failed to match",
-      "Updated selectors for new page structure — different elements broke next day",
-      "Tried regex-based extraction — inconsistent results"
+      "Updated selectors for new page structure — different elements broke next day"
     ]
   },
   "inference": {
     "journey_stage": "execute-task",
-    "problem_family": "better_alternative_exists",
-    "why_current_path_failed": "Web scraping a status page is a fragile approach. The page structure can change at any time, breaking the scraper. An official API provides structured, stable data.",
+    "problem_family": "capability_mismatch",
+    "why_current_path_failed": "Web scraping a status page is a fragile approach. The page structure can change at any time.",
     "best_candidate_route_id": "switch_to_api_or_connector_access",
-    "best_candidate_route_detail": "Configure the cloud-status-api-mcp connector using the available API key. This provides structured incident data without the fragility of web scraping.",
+    "best_candidate_route_detail": "Configure the cloud-status-api-mcp connector using the available API key for structured, stable data.",
     "prerequisites_for_switch": [
       "api_credentials_available",
       "internet_access"
     ],
     "confidence": "high"
   },
-  "resolution": {
-    "outcome": "resolved",
-    "follow_up_notes": "Configured cloud-status-api-mcp with API key. Monitoring is stable and data is structured."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

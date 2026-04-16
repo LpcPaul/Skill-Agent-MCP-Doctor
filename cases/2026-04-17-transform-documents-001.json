@@ -2,7 +2,7 @@
   "schema_version": "2.1",
   "id": "2026-04-17-transform-documents-001",
   "title": "transform-documents validate-output quality_miss",
-  "summary": "Agent generated a JSON config file but the output was missing required fields and had incorrect nesting, causing the downstream system to reject it.",
+  "summary": "Agent generated a JSON config file but the output was missing required fields and had incorrect nesting.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "transform-documents",
@@ -15,8 +15,7 @@
     "desired_outcome": "Generate a valid JSON configuration file for a CI/CD pipeline.",
     "attempted_path": {
       "tool": "code-editing",
-      "tool_type": "skill",
-      "other_tools": []
+      "tool_type": "skill"
     },
     "symptom": "The generated JSON file is rejected by the CI/CD system. Missing required 'version' field, and the 'stages' array is nested under the wrong parent key.",
     "symptom_tags": [
@@ -30,8 +29,7 @@
       "requires_dynamic_render": false,
       "requires_local_filesystem": true,
       "requires_network": false,
-      "requires_deterministic_execution": false,
-      "notes": "Schema reference available in project docs."
+      "requires_deterministic_execution": false
     },
     "failed_step": "CI/CD pipeline rejects config with 'missing required field: version'",
     "artifacts_used": [
@@ -40,24 +38,22 @@
     ],
     "reproduction_steps": [
       "Generated initial JSON config",
-      "Pipeline rejected — missing 'version' field",
-      "Added version but placed stages under wrong parent — rejected again"
+      "Pipeline rejected — missing 'version' field"
     ]
   },
   "inference": {
     "journey_stage": "validate-output",
     "problem_family": "quality_miss",
-    "why_current_path_failed": "The agent is generating JSON without validating against the target schema. Each retry fixes one issue but introduces another because there is no schema-level validation step.",
+    "why_current_path_failed": "The agent is generating JSON without validating against the target schema.",
     "best_candidate_route_id": "switch_to_schema_or_format_validation",
-    "best_candidate_route_detail": "Use the project's CI/CD schema documentation as a template. Generate the JSON by filling in the schema structure rather than writing it from scratch. Validate the output against the schema before submission.",
+    "best_candidate_route_detail": "Use the project's CI/CD schema documentation as a template. Validate the output against the schema before submission.",
     "prerequisites_for_switch": [],
     "confidence": "medium"
   },
-  "resolution": {
-    "outcome": "resolved",
-    "follow_up_notes": "Used schema doc as template. Validated with jsonschema before committing."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

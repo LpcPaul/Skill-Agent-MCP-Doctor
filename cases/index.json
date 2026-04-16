@@ -1,7 +1,7 @@
 {
   "schema_version": "2.1",
   "project_name": "agentrx",
-  "generated_at": "2026-04-16T14:54:32Z",
+  "generated_at": "2026-04-16T16:26:51Z",
   "navigation_order": [
     "task",
     "journey_stage",
@@ -46,11 +46,8 @@
     "switch_to_web_research": 1
   },
   "problem_families": [
-    "better_alternative_exists",
     "capability_mismatch",
-    "configuration",
-    "environment",
-    "observability_gap",
+    "environment_or_config",
     "quality_miss",
     "recovery_gap",
     "task_framing_issue"
@@ -67,26 +64,26 @@
   "cases": [
     {
       "id": "2026-04-17-analyze-data-001",
-      "title": "analyze-data understand-task observability_gap",
+      "title": "analyze-data understand-task recovery_gap",
       "summary": "Agent tried to analyze data but could not find the source file because it was looking in the wrong directory and using the wrong filename.",
       "schema_version": "2.1",
       "task": "analyze-data",
       "desired_outcome": "Generate a summary report from a CSV dataset uploaded by the user.",
       "attempted_path": "python",
-      "symptom": "File not found error. The agent searched for 'data.csv' in the current directory but the file was named 'Q1_results.csv' and located in a subdirectory.",
+      "symptom": "File not found error. The agent searched for 'data.csv' in the current directory but the file was named 'Q1_results.csv' in a subdirectory.",
       "journey_stage": "understand-task",
-      "problem_family": "observability_gap",
-      "why_current_path_failed": "The agent has insufficient visibility into the available files. Before attempting data analysis, it needs to discover what files exist and where they are located.",
+      "problem_family": "recovery_gap",
+      "why_current_path_failed": "The agent has insufficient visibility into the available files.",
       "best_candidate_route_id": "switch_to_local_file_inspection",
       "confidence": "high",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "analyze-data",
         "understand-task",
-        "observability_gap",
+        "recovery_gap",
         "file-location"
       ],
-      "searchable_text": "analyze-data Generate a summary report from a CSV dataset uploaded by the user. python File not found error. The agent searched for 'data.csv' in the current directory but the file was named 'Q1_results.csv' and located in a subdirectory. understand-task observability_gap The agent has insufficient visibility into the available files. Before attempting data analysis, it needs to discover what files exist and where they are located. switch_to_local_file_inspection Run a recursive file listing or glob search to discover all available CSV files in the workspace. Once the correct file is found, proceed with analysis. Agent tried to analyze data but could not find the source file because it was looking in the wrong directory and using the wrong filename. analyze-data understand-task observability_gap file-location"
+      "searchable_text": "analyze-data Generate a summary report from a CSV dataset uploaded by the user. python File not found error. The agent searched for 'data.csv' in the current directory but the file was named 'Q1_results.csv' in a subdirectory. understand-task recovery_gap The agent has insufficient visibility into the available files. switch_to_local_file_inspection Run a recursive file listing to discover all available CSV files in the workspace. Agent tried to analyze data but could not find the source file because it was looking in the wrong directory and using the wrong filename. analyze-data understand-task recovery_gap file-location"
     },
     {
       "id": "2026-04-17-browse-web-001",
@@ -102,18 +99,18 @@
       "why_current_path_failed": "The builtin fetch tool retrieves static HTML only. The product data on this page is rendered client-side via JavaScript, which static fetch cannot execute.",
       "best_candidate_route_id": "switch_to_alternative_tool_path",
       "confidence": "high",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "browse-web",
         "execute-task",
         "capability_mismatch",
         "dynamic-rendering"
       ],
-      "searchable_text": "browse-web Extract the full product listing table from a retail website. web_fetch The fetched HTML only contains the page skeleton. All product data loaded via JavaScript is missing. execute-task capability_mismatch The builtin fetch tool retrieves static HTML only. The product data on this page is rendered client-side via JavaScript, which static fetch cannot execute. switch_to_alternative_tool_path Switch to a browser-capable route that executes JavaScript. playwright-mcp can render the page and extract the full DOM. Alternatively, browser-cdp skill with explicit wait-for-content logic. Agent used a static HTML fetch tool for a dynamically rendered page. Only the shell was captured, missing all content populated by JavaScript. browse-web execute-task capability_mismatch dynamic-rendering"
+      "searchable_text": "browse-web Extract the full product listing table from a retail website. web_fetch The fetched HTML only contains the page skeleton. All product data loaded via JavaScript is missing. execute-task capability_mismatch The builtin fetch tool retrieves static HTML only. The product data on this page is rendered client-side via JavaScript, which static fetch cannot execute. switch_to_alternative_tool_path Switch to a browser-capable route that executes JavaScript. playwright-mcp can render the page and extract the full DOM. Agent used a static HTML fetch tool for a dynamically rendered page. Only the shell was captured, missing all content populated by JavaScript. browse-web execute-task capability_mismatch dynamic-rendering"
     },
     {
       "id": "2026-04-17-code-editing-001",
-      "title": "code-editing execute-task configuration",
+      "title": "code-editing execute-task environment_or_config",
       "summary": "Agent attempted to integrate a third-party API using guessed parameter names and structure, resulting in repeated authentication errors.",
       "schema_version": "2.1",
       "task": "code-editing",
@@ -121,69 +118,69 @@
       "attempted_path": "code-editing",
       "symptom": "Repeated API calls fail with authentication errors. The agent has tried different credential formats without success.",
       "journey_stage": "execute-task",
-      "problem_family": "configuration",
-      "why_current_path_failed": "The agent is working from assumptions about API behavior rather than the actual specification. Without the authoritative documentation, every attempt is a guess.",
+      "problem_family": "environment_or_config",
+      "why_current_path_failed": "The agent is working from assumptions about API behavior rather than the actual specification.",
       "best_candidate_route_id": "switch_to_official_docs",
       "confidence": "high",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "code-editing",
         "execute-task",
-        "configuration",
+        "environment_or_config",
         "third-party-api"
       ],
-      "searchable_text": "code-editing Integrate a payment gateway API into the existing application. code-editing Repeated API calls fail with authentication errors. The agent has tried different credential formats without success. execute-task configuration The agent is working from assumptions about API behavior rather than the actual specification. Without the authoritative documentation, every attempt is a guess. switch_to_official_docs Fetch the payment gateway's official API documentation to understand the correct authentication flow, required headers, and request format. This is faster than trial-and-error. Agent attempted to integrate a third-party API using guessed parameter names and structure, resulting in repeated authentication errors. code-editing execute-task configuration third-party-api"
+      "searchable_text": "code-editing Integrate a payment gateway API into the existing application. code-editing Repeated API calls fail with authentication errors. The agent has tried different credential formats without success. execute-task environment_or_config The agent is working from assumptions about API behavior rather than the actual specification. switch_to_official_docs Fetch the payment gateway's official API documentation to understand the correct authentication flow. Agent attempted to integrate a third-party API using guessed parameter names and structure, resulting in repeated authentication errors. code-editing execute-task environment_or_config third-party-api"
     },
     {
       "id": "2026-04-17-code-editing-002",
-      "title": "code-editing configure-capability environment",
-      "summary": "Agent repeatedly failed to run a Python script because a required package was not installed in the environment, but kept retrying the same execution.",
+      "title": "code-editing configure-capability environment_or_config",
+      "summary": "Agent repeatedly failed to run a Python script because a required package was not installed in the environment.",
       "schema_version": "2.1",
       "task": "code-editing",
       "desired_outcome": "Run a data visualization script that uses matplotlib and seaborn.",
       "attempted_path": "python",
       "symptom": "ModuleNotFoundError: No module named 'seaborn'. The agent retried the script three times without addressing the missing dependency.",
       "journey_stage": "configure-capability",
-      "problem_family": "environment",
-      "why_current_path_failed": "The execution environment is missing a required dependency. Retrying the script will not install seaborn — the environment must be fixed first.",
+      "problem_family": "environment_or_config",
+      "why_current_path_failed": "The execution environment is missing a required dependency. Retrying the script will not install seaborn.",
       "best_candidate_route_id": "switch_to_environment_debugging",
       "confidence": "high",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "code-editing",
         "configure-capability",
-        "environment",
+        "environment_or_config",
         "dependency"
       ],
-      "searchable_text": "code-editing Run a data visualization script that uses matplotlib and seaborn. python ModuleNotFoundError: No module named 'seaborn'. The agent retried the script three times without addressing the missing dependency. configure-capability environment The execution environment is missing a required dependency. Retrying the script will not install seaborn — the environment must be fixed first. switch_to_environment_debugging Install the missing seaborn package via pip, or modify the script to use only available packages. If pip install is blocked in this environment, fall back to matplotlib-only visualization. Agent repeatedly failed to run a Python script because a required package was not installed in the environment, but kept retrying the same execution. code-editing configure-capability environment dependency"
+      "searchable_text": "code-editing Run a data visualization script that uses matplotlib and seaborn. python ModuleNotFoundError: No module named 'seaborn'. The agent retried the script three times without addressing the missing dependency. configure-capability environment_or_config The execution environment is missing a required dependency. Retrying the script will not install seaborn. switch_to_environment_debugging Install the missing seaborn package via pip, or fall back to matplotlib-only visualization. Agent repeatedly failed to run a Python script because a required package was not installed in the environment. code-editing configure-capability environment_or_config dependency"
     },
     {
       "id": "2026-04-17-code-editing-003",
       "title": "code-editing recover-from-failure recovery_gap",
-      "summary": "Agent encountered an intermittent test failure that only reproduces 30% of the time. Multiple retry attempts produced inconsistent results, making root cause identification impossible.",
+      "summary": "Agent encountered an intermittent test failure that only reproduces 30% of the time.",
       "schema_version": "2.1",
       "task": "code-editing",
       "desired_outcome": "Fix a failing unit test in the authentication module.",
       "attempted_path": "code-editing",
-      "symptom": "The test fails intermittently — approximately 30% of runs produce a timeout error. When it passes, the agent cannot determine which change fixed it.",
+      "symptom": "The test fails intermittently — approximately 30% of runs produce a timeout error.",
       "journey_stage": "recover-from-failure",
       "problem_family": "recovery_gap",
-      "why_current_path_failed": "The intermittent nature of the failure makes it impossible to determine if a code change actually fixed the issue. The agent needs a reliable reproduction method before attempting fixes.",
+      "why_current_path_failed": "The intermittent nature of the failure makes it impossible to determine if a code change actually fixed the issue.",
       "best_candidate_route_id": "switch_to_repro_minimization",
       "confidence": "medium",
-      "outcome": "partially_resolved",
+      "outcome": "unknown",
       "tags": [
         "code-editing",
         "recover-from-failure",
         "recovery_gap",
         "flaky-test"
       ],
-      "searchable_text": "code-editing Fix a failing unit test in the authentication module. code-editing The test fails intermittently — approximately 30% of runs produce a timeout error. When it passes, the agent cannot determine which change fixed it. recover-from-failure recovery_gap The intermittent nature of the failure makes it impossible to determine if a code change actually fixed the issue. The agent needs a reliable reproduction method before attempting fixes. switch_to_repro_minimization Create a minimal reproduction script that isolates the async HTTP call and runs it repeatedly to confirm the failure pattern. Then test fixes against this reproducible setup rather than the full test suite. Agent encountered an intermittent test failure that only reproduces 30% of the time. Multiple retry attempts produced inconsistent results, making root cause identification impossible. code-editing recover-from-failure recovery_gap flaky-test"
+      "searchable_text": "code-editing Fix a failing unit test in the authentication module. code-editing The test fails intermittently — approximately 30% of runs produce a timeout error. recover-from-failure recovery_gap The intermittent nature of the failure makes it impossible to determine if a code change actually fixed the issue. switch_to_repro_minimization Create a minimal reproduction script that isolates the async HTTP call and runs it repeatedly to confirm the failure pattern. Agent encountered an intermittent test failure that only reproduces 30% of the time. code-editing recover-from-failure recovery_gap flaky-test"
     },
     {
       "id": "2026-04-17-create-presentation-001",
       "title": "create-presentation choose-capability task_framing_issue",
-      "summary": "Agent was asked to create a presentation but received no content outline, speaker notes, or design preferences. Multiple attempts to generate content were all rejected.",
+      "summary": "Agent was asked to create a presentation but received no content outline, speaker notes, or design preferences.",
       "schema_version": "2.1",
       "task": "create-presentation",
       "desired_outcome": "Generate a slide deck for a quarterly business review.",
@@ -191,68 +188,68 @@
       "symptom": "Every generated slide deck is rejected by the user for being too generic, wrong tone, or missing key metrics.",
       "journey_stage": "choose-capability",
       "problem_family": "task_framing_issue",
-      "why_current_path_failed": "The task is underspecified. The agent cannot produce a satisfactory presentation without knowing the audience, key metrics, design preferences, or outline. Continuing to generate drafts is wasted effort.",
+      "why_current_path_failed": "The task is underspecified. The agent cannot produce a satisfactory presentation without knowing the audience, key metrics, design preferences, or outline.",
       "best_candidate_route_id": "request_missing_input",
       "confidence": "high",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "create-presentation",
         "choose-capability",
         "task_framing_issue",
         "missing-input"
       ],
-      "searchable_text": "create-presentation Generate a slide deck for a quarterly business review. pptx-generator Every generated slide deck is rejected by the user for being too generic, wrong tone, or missing key metrics. choose-capability task_framing_issue The task is underspecified. The agent cannot produce a satisfactory presentation without knowing the audience, key metrics, design preferences, or outline. Continuing to generate drafts is wasted effort. request_missing_input Ask the user for: (1) key metrics or data points to include, (2) target audience, (3) preferred tone and design style, (4) any existing outline or reference deck. Agent was asked to create a presentation but received no content outline, speaker notes, or design preferences. Multiple attempts to generate content were all rejected. create-presentation choose-capability task_framing_issue missing-input"
+      "searchable_text": "create-presentation Generate a slide deck for a quarterly business review. pptx-generator Every generated slide deck is rejected by the user for being too generic, wrong tone, or missing key metrics. choose-capability task_framing_issue The task is underspecified. The agent cannot produce a satisfactory presentation without knowing the audience, key metrics, design preferences, or outline. request_missing_input Ask the user for: (1) key metrics or data points, (2) target audience, (3) preferred tone and design style. Agent was asked to create a presentation but received no content outline, speaker notes, or design preferences. create-presentation choose-capability task_framing_issue missing-input"
     },
     {
       "id": "2026-04-17-monitor-and-check-001",
-      "title": "monitor-and-check execute-task better_alternative_exists",
+      "title": "monitor-and-check execute-task capability_mismatch",
       "summary": "Agent attempted to monitor a cloud service's status by scraping a public status page, but the page structure changed and the scraper broke.",
       "schema_version": "2.1",
       "task": "monitor-and-check",
       "desired_outcome": "Monitor the operational status of a cloud service and alert on incidents.",
       "attempted_path": "browser-cdp",
-      "symptom": "The web scraper broke after the status page was redesigned. The CSS selectors no longer match, and the agent cannot maintain the scraper.",
+      "symptom": "The web scraper broke after the status page was redesigned. The CSS selectors no longer match.",
       "journey_stage": "execute-task",
-      "problem_family": "better_alternative_exists",
-      "why_current_path_failed": "Web scraping a status page is a fragile approach. The page structure can change at any time, breaking the scraper. An official API provides structured, stable data.",
+      "problem_family": "capability_mismatch",
+      "why_current_path_failed": "Web scraping a status page is a fragile approach. The page structure can change at any time.",
       "best_candidate_route_id": "switch_to_api_or_connector_access",
       "confidence": "high",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "monitor-and-check",
         "execute-task",
-        "better_alternative_exists",
+        "capability_mismatch",
         "status-monitoring"
       ],
-      "searchable_text": "monitor-and-check Monitor the operational status of a cloud service and alert on incidents. browser-cdp The web scraper broke after the status page was redesigned. The CSS selectors no longer match, and the agent cannot maintain the scraper. execute-task better_alternative_exists Web scraping a status page is a fragile approach. The page structure can change at any time, breaking the scraper. An official API provides structured, stable data. switch_to_api_or_connector_access Configure the cloud-status-api-mcp connector using the available API key. This provides structured incident data without the fragility of web scraping. Agent attempted to monitor a cloud service's status by scraping a public status page, but the page structure changed and the scraper broke. monitor-and-check execute-task better_alternative_exists status-monitoring"
+      "searchable_text": "monitor-and-check Monitor the operational status of a cloud service and alert on incidents. browser-cdp The web scraper broke after the status page was redesigned. The CSS selectors no longer match. execute-task capability_mismatch Web scraping a status page is a fragile approach. The page structure can change at any time. switch_to_api_or_connector_access Configure the cloud-status-api-mcp connector using the available API key for structured, stable data. Agent attempted to monitor a cloud service's status by scraping a public status page, but the page structure changed and the scraper broke. monitor-and-check execute-task capability_mismatch status-monitoring"
     },
     {
       "id": "2026-04-17-search-and-compare-tools-001",
-      "title": "search-and-compare-tools understand-task better_alternative_exists",
+      "title": "search-and-compare-tools understand-task capability_mismatch",
       "summary": "Agent used a general web search to find technical API documentation, but the search results returned blog posts and tutorials instead of authoritative references.",
       "schema_version": "2.1",
       "task": "search-and-compare-tools",
       "desired_outcome": "Find the correct method signature for a specific library function.",
       "attempted_path": "tavily",
-      "symptom": "Web search returns blog posts and StackOverflow answers from 2022, which reference deprecated method signatures. No official documentation links appear in results.",
+      "symptom": "Web search returns blog posts and StackOverflow answers from 2022, which reference deprecated method signatures.",
       "journey_stage": "understand-task",
-      "problem_family": "better_alternative_exists",
-      "why_current_path_failed": "General web search is not the right tool for finding authoritative API documentation. It returns popular content, which in this case is outdated.",
+      "problem_family": "capability_mismatch",
+      "why_current_path_failed": "General web search is not the right tool for finding authoritative API documentation.",
       "best_candidate_route_id": "switch_to_web_research",
       "confidence": "medium",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "search-and-compare-tools",
         "understand-task",
-        "better_alternative_exists",
+        "capability_mismatch",
         "web-research"
       ],
-      "searchable_text": "search-and-compare-tools Find the correct method signature for a specific library function. tavily Web search returns blog posts and StackOverflow answers from 2022, which reference deprecated method signatures. No official documentation links appear in results. understand-task better_alternative_exists General web search is not the right tool for finding authoritative API documentation. It returns popular content, which in this case is outdated. switch_to_web_research Use a targeted approach: search specifically for the library's official documentation site, or use web_fetch to directly access the library's docs URL. A focused search with 'site:library-docs-domain' would yield current results. Agent used a general web search to find technical API documentation, but the search results returned blog posts and tutorials instead of authoritative references. search-and-compare-tools understand-task better_alternative_exists web-research"
+      "searchable_text": "search-and-compare-tools Find the correct method signature for a specific library function. tavily Web search returns blog posts and StackOverflow answers from 2022, which reference deprecated method signatures. understand-task capability_mismatch General web search is not the right tool for finding authoritative API documentation. switch_to_web_research Search specifically for the library's official documentation site, or use web_fetch to directly access the library's docs URL. Agent used a general web search to find technical API documentation, but the search results returned blog posts and tutorials instead of authoritative references. search-and-compare-tools understand-task capability_mismatch web-research"
     },
     {
       "id": "2026-04-17-transform-documents-001",
       "title": "transform-documents validate-output quality_miss",
-      "summary": "Agent generated a JSON config file but the output was missing required fields and had incorrect nesting, causing the downstream system to reject it.",
+      "summary": "Agent generated a JSON config file but the output was missing required fields and had incorrect nesting.",
       "schema_version": "2.1",
       "task": "transform-documents",
       "desired_outcome": "Generate a valid JSON configuration file for a CI/CD pipeline.",
@@ -260,22 +257,22 @@
       "symptom": "The generated JSON file is rejected by the CI/CD system. Missing required 'version' field, and the 'stages' array is nested under the wrong parent key.",
       "journey_stage": "validate-output",
       "problem_family": "quality_miss",
-      "why_current_path_failed": "The agent is generating JSON without validating against the target schema. Each retry fixes one issue but introduces another because there is no schema-level validation step.",
+      "why_current_path_failed": "The agent is generating JSON without validating against the target schema.",
       "best_candidate_route_id": "switch_to_schema_or_format_validation",
       "confidence": "medium",
-      "outcome": "resolved",
+      "outcome": "unknown",
       "tags": [
         "transform-documents",
         "validate-output",
         "quality_miss",
         "json-validation"
       ],
-      "searchable_text": "transform-documents Generate a valid JSON configuration file for a CI/CD pipeline. code-editing The generated JSON file is rejected by the CI/CD system. Missing required 'version' field, and the 'stages' array is nested under the wrong parent key. validate-output quality_miss The agent is generating JSON without validating against the target schema. Each retry fixes one issue but introduces another because there is no schema-level validation step. switch_to_schema_or_format_validation Use the project's CI/CD schema documentation as a template. Generate the JSON by filling in the schema structure rather than writing it from scratch. Validate the output against the schema before submission. Agent generated a JSON config file but the output was missing required fields and had incorrect nesting, causing the downstream system to reject it. transform-documents validate-output quality_miss json-validation"
+      "searchable_text": "transform-documents Generate a valid JSON configuration file for a CI/CD pipeline. code-editing The generated JSON file is rejected by the CI/CD system. Missing required 'version' field, and the 'stages' array is nested under the wrong parent key. validate-output quality_miss The agent is generating JSON without validating against the target schema. switch_to_schema_or_format_validation Use the project's CI/CD schema documentation as a template. Validate the output against the schema before submission. Agent generated a JSON config file but the output was missing required fields and had incorrect nesting. transform-documents validate-output quality_miss json-validation"
     },
     {
       "id": "2026-04-17-workflow-automation-001",
       "title": "workflow-automation choose-capability capability_mismatch",
-      "summary": "Agent was asked to build a full dashboard application in one task. It produced a partial implementation that mixed frontend, backend, and data pipeline code without clear separation.",
+      "summary": "Agent was asked to build a full dashboard application in one task. It produced a partial implementation that mixed frontend, backend, and data pipeline code.",
       "schema_version": "2.1",
       "task": "workflow-automation",
       "desired_outcome": "Build a data dashboard with charts, filters, and a backend API serving live metrics.",
@@ -283,17 +280,17 @@
       "symptom": "The generated code mixes frontend components, API routes, and data transformation logic in a single file. The result is incomplete and unrunnable.",
       "journey_stage": "choose-capability",
       "problem_family": "capability_mismatch",
-      "why_current_path_failed": "The task is too large for a single tool path. The agent needs to decompose it into independent sub-tasks (frontend, backend, data) and address each separately.",
+      "why_current_path_failed": "The task is too large for a single tool path. The agent needs to decompose it into independent sub-tasks.",
       "best_candidate_route_id": "decompose_task_first",
       "confidence": "high",
-      "outcome": "partially_resolved",
+      "outcome": "unknown",
       "tags": [
         "workflow-automation",
         "choose-capability",
         "capability_mismatch",
         "complex-task"
       ],
-      "searchable_text": "workflow-automation Build a data dashboard with charts, filters, and a backend API serving live metrics. code-editing The generated code mixes frontend components, API routes, and data transformation logic in a single file. The result is incomplete and unrunnable. choose-capability capability_mismatch The task is too large for a single tool path. The agent needs to decompose it into independent sub-tasks (frontend, backend, data) and address each separately. decompose_task_first Split into three phases: (1) Design the data model and API contract, (2) Build the backend API, (3) Build the frontend. Each phase uses a focused tool path. Agent was asked to build a full dashboard application in one task. It produced a partial implementation that mixed frontend, backend, and data pipeline code without clear separation. workflow-automation choose-capability capability_mismatch complex-task"
+      "searchable_text": "workflow-automation Build a data dashboard with charts, filters, and a backend API serving live metrics. code-editing The generated code mixes frontend components, API routes, and data transformation logic in a single file. The result is incomplete and unrunnable. choose-capability capability_mismatch The task is too large for a single tool path. The agent needs to decompose it into independent sub-tasks. decompose_task_first Split into three phases: (1) Design the data model and API contract, (2) Build the backend API, (3) Build the frontend. Agent was asked to build a full dashboard application in one task. It produced a partial implementation that mixed frontend, backend, and data pipeline code. workflow-automation choose-capability capability_mismatch complex-task"
     }
   ]
 }

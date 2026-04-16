@@ -1,13 +1,13 @@
 {
   "schema_version": "2.1",
   "id": "2026-04-17-code-editing-002",
-  "title": "code-editing configure-capability environment",
-  "summary": "Agent repeatedly failed to run a Python script because a required package was not installed in the environment, but kept retrying the same execution.",
+  "title": "code-editing configure-capability environment_or_config",
+  "summary": "Agent repeatedly failed to run a Python script because a required package was not installed in the environment.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "code-editing",
     "configure-capability",
-    "environment",
+    "environment_or_config",
     "dependency"
   ],
   "evidence": {
@@ -15,23 +15,21 @@
     "desired_outcome": "Run a data visualization script that uses matplotlib and seaborn.",
     "attempted_path": {
       "tool": "python",
-      "tool_type": "builtin",
-      "other_tools": []
+      "tool_type": "builtin"
     },
     "symptom": "ModuleNotFoundError: No module named 'seaborn'. The agent retried the script three times without addressing the missing dependency.",
     "symptom_tags": [
       "import-error",
       "missing-dependency"
     ],
-    "context": "The script requires matplotlib and seaborn. Only matplotlib was pre-installed in the environment.",
+    "context": "The script requires matplotlib and seaborn. Only matplotlib was pre-installed.",
     "environment": {
       "platform": "claude-code",
       "requires_login": false,
       "requires_dynamic_render": false,
       "requires_local_filesystem": true,
       "requires_network": true,
-      "requires_deterministic_execution": false,
-      "notes": "Sandboxed environment with limited package installation ability."
+      "requires_deterministic_execution": false
     },
     "failed_step": "python script.py fails with ModuleNotFoundError for seaborn",
     "artifacts_used": [
@@ -40,27 +38,25 @@
     ],
     "reproduction_steps": [
       "Ran script.py — ModuleNotFoundError: seaborn",
-      "Retried — same error",
-      "Retried with different working directory — same error"
+      "Retried — same error"
     ]
   },
   "inference": {
     "journey_stage": "configure-capability",
-    "problem_family": "environment",
-    "why_current_path_failed": "The execution environment is missing a required dependency. Retrying the script will not install seaborn — the environment must be fixed first.",
+    "problem_family": "environment_or_config",
+    "why_current_path_failed": "The execution environment is missing a required dependency. Retrying the script will not install seaborn.",
     "best_candidate_route_id": "switch_to_environment_debugging",
-    "best_candidate_route_detail": "Install the missing seaborn package via pip, or modify the script to use only available packages. If pip install is blocked in this environment, fall back to matplotlib-only visualization.",
+    "best_candidate_route_detail": "Install the missing seaborn package via pip, or fall back to matplotlib-only visualization.",
     "prerequisites_for_switch": [
       "repo_access",
       "internet_access"
     ],
     "confidence": "high"
   },
-  "resolution": {
-    "outcome": "resolved",
-    "follow_up_notes": "pip install seaborn succeeded. Script ran successfully."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

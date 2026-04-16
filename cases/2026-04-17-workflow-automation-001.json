@@ -2,7 +2,7 @@
   "schema_version": "2.1",
   "id": "2026-04-17-workflow-automation-001",
   "title": "workflow-automation choose-capability capability_mismatch",
-  "summary": "Agent was asked to build a full dashboard application in one task. It produced a partial implementation that mixed frontend, backend, and data pipeline code without clear separation.",
+  "summary": "Agent was asked to build a full dashboard application in one task. It produced a partial implementation that mixed frontend, backend, and data pipeline code.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "workflow-automation",
@@ -15,29 +15,21 @@
     "desired_outcome": "Build a data dashboard with charts, filters, and a backend API serving live metrics.",
     "attempted_path": {
       "tool": "code-editing",
-      "tool_type": "skill",
-      "other_tools": [
-        {
-          "name": "frontend-design",
-          "type": "skill",
-          "role": "candidate alternative"
-        }
-      ]
+      "tool_type": "skill"
     },
     "symptom": "The generated code mixes frontend components, API routes, and data transformation logic in a single file. The result is incomplete and unrunnable.",
     "symptom_tags": [
       "mixed-concerns",
       "incomplete-implementation"
     ],
-    "context": "The dashboard requires three distinct components: (1) frontend UI, (2) backend API, (3) data processing pipeline. The agent tried to address all three in one pass.",
+    "context": "The dashboard requires three distinct components: (1) frontend UI, (2) backend API, (3) data processing pipeline.",
     "environment": {
       "platform": "claude-code",
       "requires_login": false,
       "requires_dynamic_render": false,
       "requires_local_filesystem": true,
       "requires_network": true,
-      "requires_deterministic_execution": false,
-      "notes": "No existing project structure to build upon."
+      "requires_deterministic_execution": false
     },
     "failed_step": "Generated monolithic code that cannot be run as-is",
     "artifacts_used": [
@@ -51,17 +43,16 @@
   "inference": {
     "journey_stage": "choose-capability",
     "problem_family": "capability_mismatch",
-    "why_current_path_failed": "The task is too large for a single tool path. The agent needs to decompose it into independent sub-tasks (frontend, backend, data) and address each separately.",
+    "why_current_path_failed": "The task is too large for a single tool path. The agent needs to decompose it into independent sub-tasks.",
     "best_candidate_route_id": "decompose_task_first",
-    "best_candidate_route_detail": "Split into three phases: (1) Design the data model and API contract, (2) Build the backend API, (3) Build the frontend. Each phase uses a focused tool path.",
+    "best_candidate_route_detail": "Split into three phases: (1) Design the data model and API contract, (2) Build the backend API, (3) Build the frontend.",
     "prerequisites_for_switch": [],
     "confidence": "high"
   },
-  "resolution": {
-    "outcome": "partially_resolved",
-    "follow_up_notes": "Decomposed into three sub-tasks. Backend API completed successfully. Frontend pending."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

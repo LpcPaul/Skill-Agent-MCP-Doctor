@@ -22,7 +22,7 @@
     "id": {
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]{6,40}$",
-      "description": "Unique case ID. Example: 2026-04-16-browse-web-001"
+      "description": "Unique case ID. Example: 2026-04-16-browse-web-a13f92cd"
     },
     "title": {
       "type": "string",
@@ -45,7 +45,11 @@
     "source": {
       "type": "string",
       "maxLength": 120,
-      "description": "Abstract source tag. No private URLs or usernames."
+      "description": "Abstract source tag. No private URLs or usernames. For synthetic seeds, use 'synthetic-seed'."
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
     },
     "tags": {
       "type": "array",
@@ -68,13 +72,26 @@
       "properties": {
         "task": {
           "type": "string",
-          "maxLength": 120,
-          "description": "What job was being attempted. Human-task level, not tool name. Example: browse-web, read-files, create-presentation."
+          "enum": [
+            "browse-web",
+            "read-files",
+            "transform-documents",
+            "create-presentation",
+            "analyze-data",
+            "code-editing",
+            "workflow-automation",
+            "communicate-and-publish",
+            "create-visual-assets",
+            "search-and-compare-tools",
+            "local-environment-setup",
+            "monitor-and-check"
+          ],
+          "description": "What job was being attempted. Must be a canonical task ID from rules/task_taxonomy.yaml."
         },
         "desired_outcome": {
           "type": "string",
           "maxLength": 200,
-          "description": "What the agent was trying to accomplish next. Example: extract main content from a public page."
+          "description": "What the agent was trying to accomplish next."
         },
         "attempted_path": {
           "type": "object",
@@ -105,11 +122,32 @@
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["name", "type"],
+                "required": [
+                  "name",
+                  "type"
+                ],
                 "properties": {
-                  "name": { "type": "string", "maxLength": 100 },
-                  "type": { "type": "string", "enum": ["skill", "mcp", "plugin", "builtin", "agent", "workflow", "hook", "unknown"] },
-                  "role": { "type": "string", "maxLength": 80 }
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "skill",
+                      "mcp",
+                      "plugin",
+                      "builtin",
+                      "agent",
+                      "workflow",
+                      "hook",
+                      "unknown"
+                    ]
+                  },
+                  "role": {
+                    "type": "string",
+                    "maxLength": 80
+                  }
                 },
                 "additionalProperties": false
               },
@@ -121,11 +159,14 @@
         "symptom": {
           "type": "string",
           "maxLength": 300,
-          "description": "Surface-level observation. No diagnosis language. Example: extracted content was incomplete."
+          "description": "Surface-level observation. No diagnosis language."
         },
         "symptom_tags": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 50 },
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          },
           "maxItems": 12
         },
         "context": {
@@ -135,17 +176,73 @@
         },
         "environment": {
           "type": "object",
+          "required": [
+            "platform"
+          ],
           "properties": {
             "platform": {
               "type": "string",
-              "enum": ["claude-code", "claude-ai", "openclaw", "codex", "cursor", "gemini-cli", "other"]
+              "enum": [
+                "claude-code",
+                "claude-ai",
+                "openclaw",
+                "codex",
+                "cursor",
+                "gemini-cli",
+                "other"
+              ]
             },
-            "requires_login": { "type": "boolean" },
-            "requires_dynamic_render": { "type": "boolean" },
-            "requires_local_filesystem": { "type": "boolean" },
-            "requires_network": { "type": "boolean" },
-            "requires_deterministic_execution": { "type": "boolean" },
-            "notes": { "type": "string", "maxLength": 300 }
+            "runtime_version": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "execution_mode": {
+              "type": "string",
+              "enum": [
+                "local",
+                "cloud",
+                "hybrid"
+              ]
+            },
+            "sandbox_level": {
+              "type": "string",
+              "enum": [
+                "strict",
+                "partial",
+                "none"
+              ]
+            },
+            "model_provider": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "model_family": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "model_name": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "requires_login": {
+              "type": "boolean"
+            },
+            "requires_dynamic_render": {
+              "type": "boolean"
+            },
+            "requires_local_filesystem": {
+              "type": "boolean"
+            },
+            "requires_network": {
+              "type": "boolean"
+            },
+            "requires_deterministic_execution": {
+              "type": "boolean"
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 300
+            }
           },
           "additionalProperties": false
         },
@@ -156,13 +253,19 @@
         },
         "artifacts_used": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 120 },
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          },
           "maxItems": 20,
           "description": "Abstract file types or resource types used. No private file paths."
         },
         "reproduction_steps": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 180 },
+          "items": {
+            "type": "string",
+            "maxLength": 180
+          },
           "maxItems": 20,
           "description": "What was already tried. Prevents looped retries."
         }
@@ -171,7 +274,7 @@
     },
     "inference": {
       "type": "object",
-      "description": "AI-generated diagnosis and prescription based on the evidence layer. These fields are re-computable and should not be treated as immutable facts.",
+      "description": "AI-generated diagnosis and prescription based on the evidence layer.",
       "required": [
         "journey_stage",
         "problem_family",
@@ -194,28 +297,22 @@
         "problem_family": {
           "type": "string",
           "enum": [
-            "environment",
-            "configuration",
+            "environment_or_config",
             "invocation",
             "capability_mismatch",
             "quality_miss",
-            "observability_gap",
-            "recovery_gap",
-            "better_alternative_exists",
-            "hook_vs_model_boundary",
             "task_framing_issue",
-            "not_a_tooling_problem",
-            "unknown"
+            "recovery_gap",
+            "not_a_tooling_problem"
           ]
         },
         "why_current_path_failed": {
           "type": "string",
           "maxLength": 300,
-          "description": "Short explanation of why the current path is unsuitable for continued progress. This is inference, not evidence."
+          "description": "Short explanation of why the current path is unsuitable for continued progress."
         },
         "best_candidate_route_id": {
           "type": "string",
-          "description": "Standard route id from rules/routes.yaml. Must NOT be a free-text tool brand name.",
           "enum": [
             "switch_to_web_research",
             "switch_to_official_docs",
@@ -227,12 +324,13 @@
             "switch_to_repro_minimization",
             "switch_to_schema_or_format_validation",
             "switch_to_alternative_tool_path"
-          ]
+          ],
+          "description": "Standard route id from rules/routes.yaml. Must NOT be a free-text tool brand name."
         },
         "best_candidate_route_detail": {
           "type": "string",
           "maxLength": 400,
-          "description": "Optional explanation of why this route is recommended. May reference specific tools or strategies."
+          "description": "Optional explanation of why this route is recommended."
         },
         "prerequisites_for_switch": {
           "type": "array",
@@ -241,12 +339,16 @@
             "maxLength": 60
           },
           "maxItems": 10,
-          "description": "Lightweight checklist of what must be true before switching. Example: internet_access, repo_access."
+          "description": "Lightweight checklist of what must be true before switching."
         },
         "confidence": {
           "type": "string",
-          "enum": ["high", "medium", "low"],
-          "description": "Confidence in this inference. Not evidence strength."
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "description": "Confidence in this inference."
         }
       },
       "additionalProperties": false
@@ -257,7 +359,12 @@
       "properties": {
         "outcome": {
           "type": "string",
-          "enum": ["resolved", "partially_resolved", "unresolved", "unknown"]
+          "enum": [
+            "resolved",
+            "partially_resolved",
+            "unresolved",
+            "unknown"
+          ]
         },
         "follow_up_notes": {
           "type": "string",
@@ -266,24 +373,32 @@
       },
       "additionalProperties": false
     },
-    "verified": {
-      "type": "boolean",
-      "default": false
-    },
     "related_cases": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "maxItems": 20
     },
     "legacy_mapping": {
       "type": "object",
       "description": "Preserves mapping from v1/v2.0 fields for backward compatibility.",
       "properties": {
-        "legacy_schema_version": { "type": "string" },
-        "legacy_failure_type": { "type": "string" },
-        "legacy_skill_triggered": { "type": "string" },
-        "legacy_task_category": { "type": "string" },
-        "legacy_journey_stage": { "type": "string" }
+        "legacy_schema_version": {
+          "type": "string"
+        },
+        "legacy_failure_type": {
+          "type": "string"
+        },
+        "legacy_skill_triggered": {
+          "type": "string"
+        },
+        "legacy_task_category": {
+          "type": "string"
+        },
+        "legacy_journey_stage": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     }

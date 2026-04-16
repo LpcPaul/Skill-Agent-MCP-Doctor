@@ -1,13 +1,13 @@
 {
   "schema_version": "2.1",
   "id": "2026-04-17-code-editing-001",
-  "title": "code-editing execute-task configuration",
+  "title": "code-editing execute-task environment_or_config",
   "summary": "Agent attempted to integrate a third-party API using guessed parameter names and structure, resulting in repeated authentication errors.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "code-editing",
     "execute-task",
-    "configuration",
+    "environment_or_config",
     "third-party-api"
   ],
   "evidence": {
@@ -15,23 +15,21 @@
     "desired_outcome": "Integrate a payment gateway API into the existing application.",
     "attempted_path": {
       "tool": "code-editing",
-      "tool_type": "skill",
-      "other_tools": []
+      "tool_type": "skill"
     },
     "symptom": "Repeated API calls fail with authentication errors. The agent has tried different credential formats without success.",
     "symptom_tags": [
       "api-error",
       "authentication-failure"
     ],
-    "context": "The payment gateway requires a specific authentication flow that differs from the agent's assumptions based on other API integrations.",
+    "context": "The payment gateway requires a specific authentication flow that differs from the agent's assumptions.",
     "environment": {
       "platform": "claude-code",
       "requires_login": false,
       "requires_dynamic_render": false,
       "requires_local_filesystem": true,
       "requires_network": true,
-      "requires_deterministic_execution": false,
-      "notes": "Has API credentials but format is uncertain."
+      "requires_deterministic_execution": false
     },
     "failed_step": "API authentication fails with 'invalid request format' error",
     "artifacts_used": [
@@ -40,26 +38,24 @@
     ],
     "reproduction_steps": [
       "Attempted integration with assumed authentication pattern",
-      "Retried with different credential encoding — same error",
-      "Tried alternative endpoint — different error received"
+      "Retried with different credential encoding — same error"
     ]
   },
   "inference": {
     "journey_stage": "execute-task",
-    "problem_family": "configuration",
-    "why_current_path_failed": "The agent is working from assumptions about API behavior rather than the actual specification. Without the authoritative documentation, every attempt is a guess.",
+    "problem_family": "environment_or_config",
+    "why_current_path_failed": "The agent is working from assumptions about API behavior rather than the actual specification.",
     "best_candidate_route_id": "switch_to_official_docs",
-    "best_candidate_route_detail": "Fetch the payment gateway's official API documentation to understand the correct authentication flow, required headers, and request format. This is faster than trial-and-error.",
+    "best_candidate_route_detail": "Fetch the payment gateway's official API documentation to understand the correct authentication flow.",
     "prerequisites_for_switch": [
       "internet_access"
     ],
     "confidence": "high"
   },
-  "resolution": {
-    "outcome": "resolved",
-    "follow_up_notes": "Official docs revealed a two-step OAuth flow the agent was not aware of."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

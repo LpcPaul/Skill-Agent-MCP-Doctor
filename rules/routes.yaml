@@ -10,6 +10,10 @@
 # - applies_when: signals that make this route the likely best choice
 # - prerequisites: what must be true for this route to work
 
+registry_version: "1"
+
+deprecated_routes: {}
+
 routes:
   switch_to_web_research:
     label: "Switch to web research"

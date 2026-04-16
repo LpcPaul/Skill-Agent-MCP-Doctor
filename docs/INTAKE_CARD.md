@@ -76,10 +76,14 @@ Bad:
 Additional context explaining the situation without business specifics.
 
 ### environment (optional)
-Platform and constraint information:
-- `platform`: claude-code, claude-ai, openclaw, etc.
-- `requires_login`, `requires_dynamic_render`, etc.
+Structured environment info relevant to diagnosis and migration value:
+- `platform` (required): `claude-code`, `openclaw`, `codex`, `cursor`, etc.
+- `runtime_version`, `execution_mode`, `sandbox_level` (recommended)
+- `requires_login`, `requires_dynamic_render`, `requires_local_filesystem`, `requires_network`, `requires_deterministic_execution` (booleans, fill as applicable)
+- `model_provider`, `model_family`, `model_name` (**optional** — only fill when there is clear evidence that model differences affected the failure)
 - `notes`: brief constraint notes
+
+**Rule:** Do not fill `model_*` fields by default. Only fill them when there is clear evidence (not speculation) that model differences affected the failure or migration value. Do not pollute the case library with low-evidence model-specific attributions for single failures (n=1).
 
 ### failed_step (optional)
 The specific step in the tool path that failed.
@@ -108,19 +112,14 @@ One of:
 ### problem_family
 What category of problem does this most resemble?
 
-One of:
-- `environment`
-- `configuration`
-- `invocation`
-- `capability_mismatch`
-- `quality_miss`
-- `observability_gap`
-- `recovery_gap`
-- `better_alternative_exists`
-- `hook_vs_model_boundary`
-- `task_framing_issue`
-- `not_a_tooling_problem`
-- `unknown`
+One of the 7 canonical families:
+- `environment_or_config` — system/runtime limits, missing config, incorrect setup
+- `invocation` — wrong flags, timing, or sequence
+- `capability_mismatch` — tool path is a poor fit for task constraints
+- `quality_miss` — tool ran but result quality insufficient
+- `task_framing_issue` — unclear or misframed task
+- `recovery_gap` — no strong fallback path or visibility
+- `not_a_tooling_problem` — not meaningfully improved by changing tools
 
 ### why_current_path_failed
 **This is a core field.** Short explanation of why the current path is unsuitable for continued progress.
@@ -173,32 +172,29 @@ evidence:
   task: "browse-web"
   desired_outcome: "Extract main content from a public webpage."
   attempted_path:
-    tool: "browser-cdp"
-    tool_type: "skill"
-    other_tools:
-      - name: "web_fetch"
-        type: "builtin"
-        role: "candidate alternative"
+    tool: "web_fetch"
+    tool_type: "builtin"
   symptom: "Extracted content was incomplete. Only the static HTML shell was captured."
   context: "The target page relies on client-side JavaScript rendering."
   environment:
     platform: "claude-code"
     requires_dynamic_render: true
     requires_network: true
+  failed_step: "Static HTML fetch returned page skeleton"
   reproduction_steps:
-    - "Used browser-cdp skill once"
+    - "Used web_fetch builtin once"
     - "Retried without changing rendering strategy"
 
 inference:
   journey_stage: "execute-task"
   problem_family: "capability_mismatch"
-  why_current_path_failed: "The current tool only captures static HTML. The page requires client-side rendering to populate its content."
+  why_current_path_failed: "The builtin fetch tool only captures static HTML. The page requires client-side rendering to populate content."
   best_candidate_route_id: "switch_to_alternative_tool_path"
-  best_candidate_route_detail: "Switch to a browser path with stronger dynamic rendering support. playwright-mcp is a good candidate."
+  best_candidate_route_detail: "Switch to a browser-capable route with stronger dynamic rendering support."
   prerequisites_for_switch:
     - "internet_access"
     - "repo_access"
-  confidence: "medium"
+  confidence: "high"
 ```
 
 ---

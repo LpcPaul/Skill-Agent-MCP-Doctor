@@ -32,9 +32,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml jsonschema
 
-      - name: Run CI self-test
+      - name: Run CI self test
         run: python3 scripts/ci_self_test.py
 
   validate-issue-case:
@@ -53,112 +53,78 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml jsonschema
 
-      # Step 1: Write issue body to file for parsing
-      - name: Write issue body to file
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            fs.writeFileSync('/tmp/issue_body.txt', context.payload.issue.body || '');
-
-      # Step 2: Check for both raw JSON and form fields
-      - name: Detect validation source
-        id: detect_source
+      # Step 1: Extract fenced JSON block from issue body
+      - name: Extract JSON block
+        id: extract
         run: |
-          HAS_JSON=false
-          HAS_FORM=false
-
+          echo "${{ github.event.issue.body }}" > /tmp/issue_body.txt
           if grep -q '```json' /tmp/issue_body.txt; then
-            HAS_JSON=true
+            sed -n '/```json/,/```/p' /tmp/issue_body.txt | grep -v '```' > /tmp/case_from_issue.json
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
           fi
 
-          # Check if structured form fields exist (Task, Symptom, Why current path failed, etc.)
-          if grep -q '^### Task$' /tmp/issue_body.txt && grep -q '^### Symptom$' /tmp/issue_body.txt; then
-            HAS_FORM=true
-          fi
-
-          echo "has_json=$HAS_JSON" >> $GITHUB_OUTPUT
-          echo "has_form=$HAS_FORM" >> $GITHUB_OUTPUT
-
-          if [ "$HAS_JSON" = "true" ] && [ "$HAS_FORM" = "true" ]; then
-            echo "::warning::Both raw JSON block and structured form fields detected. Using raw JSON for validation."
-          fi
-
-      # Step 3: Extract or assemble case JSON
-      - name: Extract raw JSON block
-        if: steps.detect_source.outputs.has_json == 'true'
-        id: extract_json
-        run: |
-          sed -n '/```json/,/```/p' /tmp/issue_body.txt | grep -v '```' > /tmp/case_from_issue.json
-          echo "validation_source=raw_json_block" >> $GITHUB_OUTPUT
-
-      - name: Assemble case JSON from form fields
-        if: steps.detect_source.outputs.has_json != 'true'
-        id: assemble
-        run: |
-          python3 scripts/parse_issue_form.py --body-file /tmp/issue_body.txt --output /tmp/case_from_issue.json
-          echo "validation_source=parsed_issue_form" >> $GITHUB_OUTPUT
-
-      # Step 4: Validate the case (works for both paths)
+      # Step 2: Validate case JSON
       - name: Validate case
+        if: steps.extract.outputs.found == 'true'
         id: validate
         run: |
-          RESULT=$(python3 scripts/validate_case.py --input /tmp/case_from_issue.json 2>&1) || EXIT_CODE=$?
+          RESULT=$(python3 scripts/validate_case.py --input /tmp/case_from_issue.json 2>&1) || EXIT_CODE=${?}
           echo "result<<EOF" >> $GITHUB_OUTPUT
           echo "$RESULT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           echo "exit_code=${EXIT_CODE:-0}" >> $GITHUB_OUTPUT
 
-      # Step 5: Post comment with results
+      # Step 3: Post validation comment
       - name: Post validation comment
+        if: steps.extract.outputs.found == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             const validateResult = `${{ steps.validate.outputs.result }}`;
             const validateExit = '${{ steps.validate.outputs.exit_code }}';
-            const validationSource = '${{ steps.extract_json.outputs.validation_source || steps.assemble.outputs.validation_source }}';
-            const hasBothSources = '${{ steps.detect_source.outputs.has_json }}' === 'true' && '${{ steps.detect_source.outputs.has_form }}' === 'true';
 
             let comment = '## AgentRX — Case Validation (v2.1)\n\n';
 
-            // Source info
-            if (hasBothSources) {
-              comment += '⚠️ Both raw JSON and form fields detected. Using raw JSON.\n\n';
-            }
-            if (validationSource === 'raw_json_block') {
-              comment += '📋 Validation source: raw JSON block from issue body.\n\n';
-            } else if (validationSource === 'parsed_issue_form') {
-              comment += '📋 Validation source: assembled from structured form fields.\n\n';
-            }
-
-            // Result
             if (validateExit === '0') {
               comment += '✅ Case passed v2.1 schema validation.\n\n';
             } else {
               comment += '❌ Case validation failed:\n\n```\n' + validateResult + '\n```\n\n';
 
-              // Categorize errors
-              if (validateResult.includes('Missing required field')) {
-                comment += '**Error type:** Missing required fields. Check evidence and inference sections.\n\n';
-              } else if (validateResult.includes('route id') || validateResult.includes('best_candidate_route_id')) {
-                comment += '**Error type:** Invalid route id. Must be from rules/routes.yaml.\n\n';
-              } else if (validateResult.includes('schema') || validateResult.includes('not in allowed values')) {
-                comment += '**Error type:** Schema violation. Check field types and enum values.\n\n';
-              } else if (validateResult.includes('parse') || validateResult.includes('JSON')) {
-                comment += '**Error type:** JSON parse error. Ensure valid JSON format.\n\n';
+              if (validateResult.includes('Missing required')) {
+                comment += '**Error:** Missing required field(s). Check evidence and inference sections.\n\n';
+              } else if (validateResult.includes('route') || validateResult.includes('best_candidate_route_id')) {
+                comment += '**Error:** Invalid route id. Must be from `rules/routes.yaml`.\n\n';
+              } else if (validateResult.includes('schema') || validateResult.includes('enum') || validateResult.includes('not in allowed values')) {
+                comment += '**Error:** Schema violation. Check field types and enum values against `schema/case.schema.json`.\n\n';
+              } else if (validateResult.includes('JSON') || validateResult.includes('parse')) {
+                comment += '**Error:** JSON parse error. Ensure valid JSON format.\n\n';
               }
             }
 
-            comment += 'Review checklist:\n';
-            comment += '- [ ] evidence.task is a human task, not a tool name\n';
-            comment += '- [ ] evidence.desired_outcome is stated\n';
-            comment += '- [ ] evidence.symptom is observable, not diagnostic\n';
-            comment += '- [ ] inference.why_current_path_failed explains the mismatch\n';
-            comment += '- [ ] inference.best_candidate_route_id is a route id (not a tool name)\n';
-            comment += '- [ ] inference.confidence is set\n';
-            comment += '- [ ] No private business context\n';
+            comment += '**Reminder:** AI contributors must submit complete v2.1 JSON. Human fallback is no longer supported.\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+      # Step 4: Post error if no JSON block found
+      - name: Post missing JSON error
+        if: steps.extract.outputs.found == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = '## AgentRX — Case Validation (v2.1)\n\n'
+              + '❌ No fenced JSON block found in the issue body.\n\n'
+              + '**AgentRX now accepts complete v2.1 JSON only.** Human fallback / form-to-JSON assembly is no longer supported.\n\n'
+              + 'Please paste a complete v2.1 case JSON in the `full_case_json` field.\n'
+              + 'See `schema/case.schema.json` for the full schema.';
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

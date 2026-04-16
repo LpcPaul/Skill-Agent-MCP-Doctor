@@ -1,16 +1,11 @@
-# Suggested high-frequency task categories
+# Canonical task taxonomy — v2.1
 #
-# Keep this list stable. Expand only when navigation improves.
+# These are the ONLY valid values for evidence.task.
+# Keep this list stable. Do not add aliases.
 #
 task_categories:
   browse-web:
     description: "Visit websites, fetch content, render dynamic pages, interact with web UI, submit forms, or extract web data."
-    common_constraints:
-      - "dynamic rendering"
-      - "login state"
-      - "anti-bot friction"
-      - "browser session"
-      - "page interaction"
 
   read-files:
     description: "Read PDFs, docs, images, code files, or local artifacts."

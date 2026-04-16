@@ -1,13 +1,13 @@
 {
   "schema_version": "2.1",
   "id": "2026-04-17-analyze-data-001",
-  "title": "analyze-data understand-task observability_gap",
+  "title": "analyze-data understand-task recovery_gap",
   "summary": "Agent tried to analyze data but could not find the source file because it was looking in the wrong directory and using the wrong filename.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "analyze-data",
     "understand-task",
-    "observability_gap",
+    "recovery_gap",
     "file-location"
   ],
   "evidence": {
@@ -15,23 +15,21 @@
     "desired_outcome": "Generate a summary report from a CSV dataset uploaded by the user.",
     "attempted_path": {
       "tool": "python",
-      "tool_type": "builtin",
-      "other_tools": []
+      "tool_type": "builtin"
     },
-    "symptom": "File not found error. The agent searched for 'data.csv' in the current directory but the file was named 'Q1_results.csv' and located in a subdirectory.",
+    "symptom": "File not found error. The agent searched for 'data.csv' in the current directory but the file was named 'Q1_results.csv' in a subdirectory.",
     "symptom_tags": [
       "file-not-found",
       "wrong-path"
     ],
-    "context": "The user uploaded a dataset but did not specify the exact filename or location. The agent assumed a generic name.",
+    "context": "The user uploaded a dataset but did not specify the exact filename or location.",
     "environment": {
       "platform": "claude-code",
       "requires_login": false,
       "requires_dynamic_render": false,
       "requires_local_filesystem": true,
       "requires_network": false,
-      "requires_deterministic_execution": false,
-      "notes": "Files available but undiscovered."
+      "requires_deterministic_execution": false
     },
     "failed_step": "Attempted to read 'data.csv' — file not found",
     "artifacts_used": [
@@ -39,26 +37,24 @@
     ],
     "reproduction_steps": [
       "Tried reading data.csv from root directory",
-      "Searched for *.csv in root — found nothing",
-      "Asked user for file location — no response yet"
+      "Searched for *.csv in root — found nothing"
     ]
   },
   "inference": {
     "journey_stage": "understand-task",
-    "problem_family": "observability_gap",
-    "why_current_path_failed": "The agent has insufficient visibility into the available files. Before attempting data analysis, it needs to discover what files exist and where they are located.",
+    "problem_family": "recovery_gap",
+    "why_current_path_failed": "The agent has insufficient visibility into the available files.",
     "best_candidate_route_id": "switch_to_local_file_inspection",
-    "best_candidate_route_detail": "Run a recursive file listing or glob search to discover all available CSV files in the workspace. Once the correct file is found, proceed with analysis.",
+    "best_candidate_route_detail": "Run a recursive file listing to discover all available CSV files in the workspace.",
     "prerequisites_for_switch": [
       "repo_access"
     ],
     "confidence": "high"
   },
-  "resolution": {
-    "outcome": "resolved",
-    "follow_up_notes": "File listing revealed Q1_results.csv in data/raw/. Analysis completed successfully."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

@@ -1,3 +1,6 @@
+> **Status: not implemented** — This is a planning spec, not the current repo state.
+> It describes a future automated case collection pipeline that has not been built.
+
 # AgentRX Auto-Collection System — Build Instructions for Claude Code
 
 You are building a fully automated case collection pipeline for **AgentRX**, 

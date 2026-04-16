@@ -91,12 +91,34 @@ For example:
 
 That routing choice belongs in the diagnosis layer.
 
-## Future hook ideas
+## Implemented hooks
 
-- `tool_error_intake_prefill.sh`
-- `environment_probe_prefill.sh`
-- `workflow_boundary_guard.sh`
-- `output_validation_signal.sh`
+### `tool_error_intake_prefill.sh`
+
+Generates an intake skeleton JSON when a tool execution fails.
+
+**Usage:**
+```bash
+./hooks/tool_error_intake_prefill.sh <task> <tool_name> <tool_type> <failed_step> <symptom>
+```
+
+**Prefills:**
+- `task`
+- `attempted_path.tool`
+- `attempted_path.tool_type`
+- `symptom`
+- `failed_step`
+- `environment.platform`
+
+The agent completes the remaining fields (desired_outcome, inference, etc.).
+
+**Example:**
+```bash
+./hooks/tool_error_intake_prefill.sh \
+  "browse-web" "web_fetch" "builtin" \
+  "Static HTML fetch returned page skeleton" \
+  "Page content missing, requires JavaScript rendering"
+```
 
 ## Migration note
 

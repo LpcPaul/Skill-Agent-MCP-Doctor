@@ -1,13 +1,13 @@
 {
   "schema_version": "2.1",
   "id": "2026-04-17-search-and-compare-tools-001",
-  "title": "search-and-compare-tools understand-task better_alternative_exists",
+  "title": "search-and-compare-tools understand-task capability_mismatch",
   "summary": "Agent used a general web search to find technical API documentation, but the search results returned blog posts and tutorials instead of authoritative references.",
   "created_at": "2026-04-17T00:00:00Z",
   "tags": [
     "search-and-compare-tools",
     "understand-task",
-    "better_alternative_exists",
+    "capability_mismatch",
     "web-research"
   ],
   "evidence": {
@@ -15,16 +15,9 @@
     "desired_outcome": "Find the correct method signature for a specific library function.",
     "attempted_path": {
       "tool": "tavily",
-      "tool_type": "skill",
-      "other_tools": [
-        {
-          "name": "web_fetch",
-          "type": "builtin",
-          "role": "candidate alternative"
-        }
-      ]
+      "tool_type": "skill"
     },
-    "symptom": "Web search returns blog posts and StackOverflow answers from 2022, which reference deprecated method signatures. No official documentation links appear in results.",
+    "symptom": "Web search returns blog posts and StackOverflow answers from 2022, which reference deprecated method signatures.",
     "symptom_tags": [
       "outdated-results",
       "wrong-result-type"
@@ -36,8 +29,7 @@
       "requires_dynamic_render": false,
       "requires_local_filesystem": false,
       "requires_network": true,
-      "requires_deterministic_execution": false,
-      "notes": "Internet access available."
+      "requires_deterministic_execution": false
     },
     "failed_step": "Web search returned outdated tutorial content, not current API reference",
     "artifacts_used": [
@@ -50,20 +42,19 @@
   },
   "inference": {
     "journey_stage": "understand-task",
-    "problem_family": "better_alternative_exists",
-    "why_current_path_failed": "General web search is not the right tool for finding authoritative API documentation. It returns popular content, which in this case is outdated.",
+    "problem_family": "capability_mismatch",
+    "why_current_path_failed": "General web search is not the right tool for finding authoritative API documentation.",
     "best_candidate_route_id": "switch_to_web_research",
-    "best_candidate_route_detail": "Use a targeted approach: search specifically for the library's official documentation site, or use web_fetch to directly access the library's docs URL. A focused search with 'site:library-docs-domain' would yield current results.",
+    "best_candidate_route_detail": "Search specifically for the library's official documentation site, or use web_fetch to directly access the library's docs URL.",
     "prerequisites_for_switch": [
       "internet_access"
     ],
     "confidence": "medium"
   },
-  "resolution": {
-    "outcome": "resolved",
-    "follow_up_notes": "Used site-specific search to find official docs with current method signature."
-  },
-  "verified": false,
   "related_cases": [],
-  "legacy_mapping": {}
+  "source": "synthetic-seed",
+  "verified": false,
+  "resolution": {
+    "outcome": "unknown"
+  }
 }

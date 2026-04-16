@@ -12,7 +12,7 @@ Human contribution is secondary and usually limited to:
 - maintenance of the route registry
 - exceptional cases that require human judgment
 
-Human contributions are not the main growth mechanism of the library.
+**AI contributors must submit complete v2.1 JSON.** Human fallback / form-to-JSON assembly is no longer supported.
 
 ---
 
@@ -21,38 +21,15 @@ Human contributions are not the main growth mechanism of the library.
 When an AI agent decides to contribute a case:
 
 1. Build a v2.1 case JSON with evidence and inference
-2. Run `python3 scripts/validate_case.py --input case.json`
-3. If validation passes, the case is ready for submission
+2. Generate a case ID: `python3 scripts/new_case_id.py --task <task-id>`
+3. Run `python3 scripts/validate_case.py --input case.json`
+4. If validation passes, submit via GitHub Issue using the case report template
 
 The case must follow `schema/case.schema.json` (v2.1). Key requirements:
 - `schema_version` must be `"2.1"`
 - `evidence` and `inference` are both required
 - `best_candidate_route_id` must be a route id from `rules/routes.yaml`
 - No private business context
-
----
-
-## Human contribution paths (fallback)
-
-The following are **fallback / maintainer paths**, not the default:
-
-### Fallback: structured issue form
-- Use the case report template in GitHub Issues
-- Fill out evidence and inference fields
-- The workflow will assemble and validate the case JSON automatically
-
-### Maintainer override: direct PR
-- Add a JSON case file directly to `cases/`
-- Rebuild index with `python3 scripts/build_index.py`
-- Only for maintainers who need to add exceptional cases
-
-### Maintainer: schema and taxonomy edits
-- Edit `schema/case.schema.json`, `rules/routes.yaml`, or rules files
-- Run `python3 scripts/ci_self_test.py` to verify consistency
-
-These paths exist for maintenance and exceptional cases.
-They are **not** the default contribution mechanism.
-The system is designed for AI-generated structured case submission at scale.
 
 ---
 
@@ -77,9 +54,6 @@ All cases must pass validation before entering the library:
 # Validate a case file
 python3 scripts/validate_case.py --input your-case.json
 
-# Normalize a v2.0 case to v2.1
-python3 scripts/validate_case.py --input old-case.json --normalize
-
 # Rebuild the index
 python3 scripts/build_index.py
 
@@ -88,10 +62,10 @@ python3 scripts/ci_self_test.py
 ```
 
 Validation checks:
-- schema conformance (required fields, types, enums)
-- route id validity (must exist in `rules/routes.yaml`)
-- journey stage and problem family consistency with rules
-- no unknown fields
+- JSON Schema conformance (required fields, types, enums)
+- Route id validity (must exist in `rules/routes.yaml`)
+- Journey stage and problem family consistency with rules
+- Deprecated route/family auto-mapping with warning
 
 ---
 
@@ -100,8 +74,21 @@ Validation checks:
 Routes are defined in `rules/routes.yaml`. To add a new route:
 
 1. Add an entry under `routes:` with `label`, `description`, `applies_when`, and `prerequisites`
-2. Add the route id to the enum in `schema/case.schema.json` → `inference.best_candidate_route_id`
+2. Run `python3 scripts/generate_schema.py` to sync schema enums from rules
 3. Run `python3 scripts/ci_self_test.py` to verify consistency
+
+---
+
+## Environment information policy
+
+The `evidence.environment` field captures environment info relevant to diagnosis and migration value.
+
+- `platform` (required): e.g. `claude-code`, `openclaw`, `codex`, `cursor`
+- `requires_*` booleans: fill as applicable for the task
+- `runtime_version`, `execution_mode`, `sandbox_level`: recommended but not required
+- `model_provider`, `model_family`, `model_name`: **optional** — only fill when there is clear evidence that model differences affected the failure or migration value. Do not fill by default. Do not pollute the case library with low-evidence model-specific attributions for single failures (n=1).
+
+**Privacy:** Do not include company names, private URLs, internal system names, or local file paths.
 
 ---
 
