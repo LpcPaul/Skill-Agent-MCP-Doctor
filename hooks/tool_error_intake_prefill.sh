@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# AgentRX — Tool error intake prefill hook
+# AgentRX — Tool error intake prefill hook (legacy)
+#
+# NOTE: For automated Claude Code integration, use hooks/claude_code/post_tool_error.py
+# which runs as a PostToolUse hook and automatically retrieves similar cases.
+#
+# This script is kept for standalone/manual use.
 #
 # Usage: When a tool execution fails, this script generates an intake
 # skeleton JSON with pre-filled evidence fields. The agent can then

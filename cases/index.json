@@ -1,7 +1,7 @@
 {
   "schema_version": "2.1",
   "project_name": "agentrx",
-  "generated_at": "2026-04-17T02:41:03Z",
+  "generated_at": "2026-04-17T02:45:45Z",
   "navigation_order": [
     "task",
     "journey_stage",
